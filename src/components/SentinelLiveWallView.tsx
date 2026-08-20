@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Video, Maximize2, ExternalLink, RefreshCw, Zap, Shield, Play } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Video, Maximize2, ExternalLink, RefreshCw, Shield } from 'lucide-react';
 
 const SENTINEL_BASE = 'https://live.sentinelgujarat.in';
 
@@ -47,18 +47,9 @@ const SENTINEL_CAMERAS: SentinelCamera[] = [
   { id: '31', number: 31, name: 'Camera 31', location: 'Gandhidham Rambaugh P2',              status: 'live', codec: 'h264', container: 'mp4' },
 ];
 
-// Ultra-fast direct video stream tile
+// Clean camera player embed with clipped controls & zero network errors
 function CameraFeedTile({ cam, onFullScreen }: { cam: SentinelCamera; onFullScreen: (cam: SentinelCamera) => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [useIframeFallback, setUseIframeFallback] = useState(false);
-  const streamUrl = `${SENTINEL_BASE}/stream/${encodeURIComponent(cam.id)}`;
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  }, [streamUrl]);
 
   return (
     <div className="relative bg-[#081325] rounded-xl border border-slate-800 overflow-hidden group flex flex-col shadow-lg">
@@ -69,48 +60,21 @@ function CameraFeedTile({ cam, onFullScreen }: { cam: SentinelCamera; onFullScre
         {!isLoaded && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#091428] text-slate-400 z-10">
             <RefreshCw className="w-5 h-5 text-blue-500 animate-spin mb-2" />
-            <span className="text-[10px] font-mono font-bold text-slate-300">Connecting Direct Stream…</span>
+            <span className="text-[10px] font-mono font-bold text-slate-300">Loading Sentinel Live Stream…</span>
             <span className="text-[9px] text-slate-500 font-mono mt-0.5">{cam.location}</span>
           </div>
         )}
 
-        {/* Primary Ultra-Fast Direct Video Stream */}
-        {!useIframeFallback ? (
-          <video
-            ref={videoRef}
-            src={streamUrl}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            autoPlay
-            muted
-            loop
-            playsInline
-            onLoadedData={() => setIsLoaded(true)}
-            onError={() => {
-              // Fallback to player page if direct stream URL requires session
-              setUseIframeFallback(true);
-            }}
-          />
-        ) : (
-          <iframe
-            src={`${SENTINEL_BASE}/camera/${encodeURIComponent(cam.id)}`}
-            title={cam.name}
-            className="w-full h-full border-0 relative z-1"
-            onLoad={() => setIsLoaded(true)}
-            allow="autoplay; fullscreen"
-            loading="lazy"
-          />
-        )}
-
-        {/* OSD Live Indicator Badge */}
-        <div className="absolute top-2 left-2 z-20 flex items-center space-x-1.5 bg-black/80 backdrop-blur-xs rounded px-2 py-0.5 pointer-events-none border border-slate-700/50">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span className="text-emerald-300 font-mono font-bold text-[9px]">LIVE</span>
-        </div>
-
-        {/* Camera number badge */}
-        <div className="absolute top-2 right-2 z-20 bg-black/80 backdrop-blur-xs rounded px-2 py-0.5 pointer-events-none border border-slate-700/50">
-          <span className="text-slate-200 font-mono font-bold text-[9px]">CAM {cam.number}</span>
-        </div>
+        {/* Sentinel Official Player Page Iframe — handles HLS, segment buffering, and avoids 500/206 errors */}
+        <iframe
+          src={`${SENTINEL_BASE}/camera/${encodeURIComponent(cam.id)}`}
+          title={`${cam.name} - ${cam.location}`}
+          className={`w-full border-0 relative z-1 transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          style={{ height: 'calc(100% + 36px)' }}
+          onLoad={() => setIsLoaded(true)}
+          allow="autoplay; fullscreen"
+          loading="lazy"
+        />
 
         {/* Fullscreen button */}
         <button
@@ -128,9 +92,8 @@ function CameraFeedTile({ cam, onFullScreen }: { cam: SentinelCamera; onFullScre
           <div className="text-xs font-bold text-white truncate font-mono">{cam.name}</div>
           <div className="text-[10px] text-slate-400 truncate mt-0.5">{cam.location}</div>
         </div>
-        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 font-mono border border-emerald-800 shrink-0 uppercase font-bold flex items-center space-x-1">
-          <Zap className="w-2.5 h-2.5 text-emerald-400" />
-          <span>FAST STREAM</span>
+        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 font-mono border border-blue-800 shrink-0 uppercase font-bold">
+          {cam.codec}
         </span>
       </div>
     </div>
@@ -171,10 +134,7 @@ export const SentinelLiveWallView: React.FC = () => {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>31 / 31 LIVE STREAMS OPERATIONAL</span>
             </span>
-            <span className="text-[#FF9933] font-mono text-[11px] font-bold flex items-center space-x-1">
-              <Zap className="w-3 h-3 text-amber-400" />
-              <span>ULTRA-FAST STREAM ACCELERATED</span>
-            </span>
+            <span className="text-slate-400 font-mono text-[11px]">Sentinel Gujarat Official Stream Player</span>
           </div>
           <h1 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center space-x-3">
             <Video className="w-5 h-5 text-blue-400" />
@@ -226,12 +186,9 @@ export const SentinelLiveWallView: React.FC = () => {
           <div className="text-[10px] text-emerald-600 font-semibold">100% Active Streams</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Performance</div>
-          <div className="text-xl font-black text-emerald-600 font-mono mt-0.5 flex items-center space-x-1">
-            <Zap className="w-4 h-4 text-emerald-500" />
-            <span>Direct Stream</span>
-          </div>
-          <div className="text-[10px] text-slate-500">Hardware Accelerated</div>
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Integration</div>
+          <div className="text-xl font-black text-blue-700 font-mono mt-0.5">HLS Player</div>
+          <div className="text-[10px] text-slate-500">Sentinel Official Engine</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Coverage</div>
@@ -288,7 +245,7 @@ export const SentinelLiveWallView: React.FC = () => {
               <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
               <div>
                 <h3 className="font-bold text-base">{fullscreenCam.name}</h3>
-                <p className="text-xs text-slate-400">{fullscreenCam.location} • Sentinel Gujarat Fast Stream</p>
+                <p className="text-xs text-slate-400">{fullscreenCam.location} • Sentinel Gujarat Official Stream</p>
               </div>
             </div>
             <button
@@ -299,18 +256,15 @@ export const SentinelLiveWallView: React.FC = () => {
             </button>
           </div>
           <div className="flex-1 flex items-center justify-center bg-black rounded-xl overflow-hidden border border-slate-800" onClick={e => e.stopPropagation()}>
-            <video
-              src={`${SENTINEL_BASE}/stream/${encodeURIComponent(fullscreenCam.id)}`}
-              className="w-full h-full object-contain"
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
+            <iframe
+              src={`${SENTINEL_BASE}/camera/${encodeURIComponent(fullscreenCam.id)}`}
+              title={fullscreenCam.name}
+              className="w-full h-full border-0"
+              allow="autoplay; fullscreen"
             />
           </div>
           <div className="text-center text-slate-400 text-xs pt-3 font-mono">
-            Source: {SENTINEL_BASE}/stream/{fullscreenCam.id} • Click outside or press Close to exit
+            Source: {SENTINEL_BASE}/camera/{fullscreenCam.id} • Click outside or press Close to exit
           </div>
         </div>
       )}

@@ -259,6 +259,7 @@ function MainApp() {
         onOpenSearch={() => setIsSearchModalOpen(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        activeTab={activeTab}
         onNavigateTab={setActiveTab}
       />
 

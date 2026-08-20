@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { 
   Bell, 
-  HelpCircle, 
   CheckCircle2,
   Video,
   Search,
-  ChevronDown
+  ChevronDown,
+  Menu,
+  X
 } from 'lucide-react';
 import { Language, UserRole } from '../types';
 import { useRBAC, ROLE_PERMISSIONS_MAP } from '../context/RBACContext';
@@ -21,6 +22,7 @@ interface HeaderProps {
   onOpenSearch?: () => void;
   unreadAlertCount?: number;
   unreadAlertsCount?: number;
+  activeTab?: string;
   onNavigateTab?: (tab: string) => void;
 }
 
@@ -31,39 +33,74 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSearch,
   unreadAlertCount = 3,
   unreadAlertsCount = 3,
+  activeTab = 'overview',
   onNavigateTab = (_tab: string) => {},
 }) => {
   const effectiveAlertCount = unreadAlertCount || unreadAlertsCount;
   const handleNotifyClick = onToggleNotifications || onOpenNotifications || (() => {});
   const { currentUser, currentRole, switchRole } = useRBAC();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const mobileNavItems = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'command-center', label: 'Command Center' },
+    { id: 'live-view', label: 'Live Wall' },
+    { id: 'anpr-search', label: 'ANPR Search' },
+    { id: 'vehicle-journey', label: 'Vehicle Journey' },
+    { id: 'alerts', label: 'Alert Center' },
+    { id: 'investigations', label: 'Investigations' },
+    { id: 'federation-overview', label: 'Federation Mesh' },
+    { id: 'vms-management', label: 'VMS Platforms' },
+    { id: 'connectors', label: 'Connectors' },
+    { id: 'event-flow', label: 'Event Pipeline' },
+    { id: 'gis', label: 'CCTV GIS' },
+    { id: 'registry', label: 'Camera Registry' },
+    { id: 'onboarding', label: 'Onboarding' },
+    { id: 'health', label: 'Health Monitoring' },
+    { id: 'departments', label: 'Departments' },
+    { id: 'districts', label: 'Districts' },
+    { id: 'gap-analysis', label: 'Gap Analysis' },
+    { id: 'reports', label: 'Reports' },
+    { id: 'administration', label: 'Administration' },
+    { id: 'audit', label: 'Audit' },
+  ];
 
   return (
     <header className="w-full bg-[#06152B] text-white border-b border-[#0D2342] select-none sticky top-0 z-40">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex items-center justify-between gap-4">
+      <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           
-          {/* Left: Emblem & Title */}
-          <div 
-            className="flex items-center space-x-3 cursor-pointer group shrink-0" 
-            onClick={() => onNavigateTab('overview')}
-          >
-            {/* White Logo Square with Blue Icon */}
-            <div className="w-9 h-9 rounded-lg bg-white p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition shrink-0">
-              <div className="w-full h-full rounded bg-[#0052CC] flex items-center justify-center text-white font-black text-xs">
-                <Video className="w-4 h-4 text-white" />
-              </div>
-            </div>
+          {/* Left: Mobile Menu Toggle & Logo */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(p => !p)}
+              className="lg:hidden p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
+              title="Toggle Mobile Navigation"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
 
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <h1 className="text-sm sm:text-base font-bold text-white tracking-tight leading-tight">
-                  Z-TRACS <span className="font-light text-slate-400">|</span> Centralised CCTV Registry
-                </h1>
+            <div 
+              className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group shrink-0" 
+              onClick={() => onNavigateTab('overview')}
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition shrink-0">
+                <div className="w-full h-full rounded bg-[#0052CC] flex items-center justify-center text-white font-black text-xs">
+                  <Video className="w-4 h-4 text-white" />
+                </div>
               </div>
-              <p className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">
-                GUJARAT POLICE <span className="text-slate-500">|</span> GOVERNMENT OF GUJARAT
-              </p>
+
+              <div>
+                <div className="flex items-center space-x-1.5">
+                  <h1 className="text-xs sm:text-base font-bold text-white tracking-tight leading-tight">
+                    Z-TRACS <span className="font-light text-slate-400 hidden xs:inline">|</span> <span className="hidden sm:inline">Centralised CCTV Registry</span>
+                  </h1>
+                </div>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">
+                  GUJARAT POLICE <span className="text-slate-500">|</span> <span className="hidden xs:inline">GOVERNMENT OF GUJARAT</span>
+                </p>
+              </div>
             </div>
           </div>
 
@@ -89,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right: Controls & User Profile Dropdown */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-1.5 sm:space-x-3">
             
             {/* Mobile Search Icon */}
             <button 
@@ -113,15 +150,15 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* User Profile Badge with Role Switcher */}
-            <div className="relative pl-2 border-l border-slate-700/60">
+            <div className="relative pl-1.5 sm:pl-2 border-l border-slate-700/60">
               <button
                 onClick={() => setIsRoleDropdownOpen(p => !p)}
-                className="flex items-center space-x-2.5 p-1 rounded-lg hover:bg-slate-800/60 transition cursor-pointer"
+                className="flex items-center space-x-2 p-1 rounded-lg hover:bg-slate-800/60 transition cursor-pointer"
               >
                 <img 
                   src={currentUser.avatar} 
                   alt={currentUser.name} 
-                  className="w-8 h-8 rounded-full object-cover ring-1 ring-blue-400/60"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-1 ring-blue-400/60"
                 />
                 <div className="hidden lg:block text-left">
                   <div className="text-xs font-bold text-white leading-tight">
@@ -131,16 +168,16 @@ export const Header: React.FC<HeaderProps> = ({
                     {ROLE_PERMISSIONS_MAP[currentRole]?.label || currentRole}
                   </div>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden xs:block" />
               </button>
 
               {/* Role Switcher Menu */}
               {isRoleDropdownOpen && (
-                <div className="absolute right-0 top-12 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-2 w-64 text-xs text-slate-800 animate-in fade-in">
+                <div className="absolute right-0 top-12 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-2 w-60 sm:w-64 text-xs text-slate-800 animate-in fade-in">
                   <div className="px-3 py-1.5 border-b border-slate-100 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
                     Switch User Role (Demo RBAC)
                   </div>
-                  <div className="space-y-1 mt-1">
+                  <div className="space-y-1 mt-1 max-h-64 overflow-y-auto">
                     {(Object.keys(ROLE_PERMISSIONS_MAP) as UserRole[]).map(rKey => {
                       const roleItem = ROLE_PERMISSIONS_MAP[rKey];
                       const isCurrent = currentRole === rKey;
@@ -174,6 +211,34 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden mt-3 pt-3 border-t border-slate-800 animate-in slide-in-from-top duration-200">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 pb-2">
+              {mobileNavItems.map(item => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onNavigateTab(item.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`px-2.5 py-2 text-xs font-semibold rounded-lg text-left transition ${
+                      isActive 
+                        ? 'bg-[#0052CC] text-white font-bold' 
+                        : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
     </header>
   );

@@ -19,7 +19,12 @@
     --gov-text-muted: #64748b;
   }
 
-  body {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
     background-color: #f4f6f9;
     color: #0f172a;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -71,7 +76,7 @@
   color: #d97706;
 }
 
-/* Scrollbar polish */
+/* Scrollbar polish & Mobile Touch Polish */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -88,4 +93,24 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #0072ce;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile Responsiveness Polish */
+@media (max-width: 640px) {
+  .leaflet-container {
+    height: 350px !important;
+  }
+  .leaflet-control-container {
+    transform: scale(0.85);
+    transform-origin: top left;
+  }
 }

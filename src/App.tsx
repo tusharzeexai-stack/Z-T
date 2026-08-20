@@ -71,6 +71,7 @@ function MainApp() {
   // 'landing' | 'login' | 'dashboard'
   const [appScreen, setAppScreen] = useState<'landing' | 'login' | 'dashboard'>('landing');
   const [loginRoleHint, setLoginRoleHint] = useState<string | undefined>(undefined);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Global Application State
   const [currentLang, setCurrentLang] = useState<Language>('en');
@@ -288,6 +289,8 @@ function MainApp() {
         currentLang={currentLang}
         healthAlertsCount={healthEvents.filter(e => !e.resolved).length}
         activeAlertsCount={alerts.filter(a => a.status === 'NEW').length}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* RIGHT: Top Header + Main Content */}
@@ -306,6 +309,7 @@ function MainApp() {
           activeTab={activeTab}
           onNavigateTab={setActiveTab}
           onLogout={() => setAppScreen('landing')}
+          onToggleMobileMenu={() => setIsMobileSidebarOpen(prev => !prev)}
         />
 
         {/* Main Content Area Viewport */}

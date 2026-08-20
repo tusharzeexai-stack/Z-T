@@ -10,7 +10,7 @@ import {
   User,
   ChevronDown,
   Activity,
-  Shield,
+  Menu,
 } from 'lucide-react';
 import { Language } from '../types';
 import { useRBAC, ROLE_PERMISSIONS_MAP } from '../context/RBACContext';
@@ -29,6 +29,7 @@ interface HeaderProps {
   activeTab?: string;
   onNavigateTab?: (tab: string) => void;
   onLogout?: () => void;
+  onToggleMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,6 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   unreadAlertCount = 0,
   unreadAlertsCount = 0,
   onLogout,
+  onToggleMobileMenu,
 }) => {
   const effectiveAlertCount = unreadAlertCount || unreadAlertsCount;
   const handleNotifyClick = onToggleNotifications || onOpenNotifications || (() => {});
@@ -69,10 +71,20 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="w-full bg-[#00253E] text-white border-b border-[#00385C] select-none flex-shrink-0 z-40" style={{ height: 52 }}>
-      <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-3">
+      <div className="h-full px-3 sm:px-6 flex items-center justify-between gap-3">
 
-        {/* LEFT: System Status */}
-        <div className="flex items-center space-x-3">
+        {/* LEFT: Mobile Menu Button & System Status */}
+        <div className="flex items-center space-x-2.5">
+          {onToggleMobileMenu && (
+            <button
+              onClick={onToggleMobileMenu}
+              className="lg:hidden p-1.5 rounded-lg bg-[#00385C] text-slate-200 hover:text-white hover:bg-[#004B7A] transition"
+              title="Toggle Navigation Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
+
           <button
             onClick={onOpenSystemStatus}
             className="hidden sm:flex items-center space-x-2 px-3 py-1 rounded bg-[#00385C] hover:bg-[#004B7A] border border-[#004B7A] text-xs font-bold transition cursor-pointer"
@@ -82,8 +94,8 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-emerald-300 uppercase tracking-wide text-[11px]">SYSTEM OPERATIONAL</span>
           </button>
 
-          {/* Mobile: just a dot */}
-          <div className="sm:hidden w-2 h-2 rounded-full bg-emerald-400"></div>
+          {/* Mobile dot indicator */}
+          <div className="sm:hidden w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0" title="System Operational" />
         </div>
 
         {/* CENTER: Global Search */}
@@ -105,6 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenSearch}
             className="md:hidden p-1.5 text-slate-300 hover:text-white rounded hover:bg-slate-800 transition"
+            title="Search"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -121,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Profile — User Icon (no avatar image) */}
+          {/* Profile — User Icon */}
           <div className="relative border-l border-slate-700 pl-2">
             <button
               onClick={() => setIsProfileDropdownOpen(p => !p)}
@@ -161,7 +174,6 @@ export const Header: React.FC<HeaderProps> = ({
 
                   {/* Profile Header */}
                   <div className="bg-[#0d1f3c] px-4 py-4 flex items-center space-x-3">
-                    {/* Big icon avatar */}
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-base flex-shrink-0 shadow-lg border-2 border-white/30"
                       style={{ background: roleColor }}

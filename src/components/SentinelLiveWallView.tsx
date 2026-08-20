@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Maximize2, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Video, Maximize2, ExternalLink, ShieldCheck, Grid2x2, LayoutGrid, Monitor } from 'lucide-react';
 
 const SENTINEL_BASE = 'https://live.sentinelgujarat.in';
 
@@ -49,49 +49,59 @@ const SENTINEL_CAMERAS: SentinelCamera[] = [
   { id: '31', number: 31, name: 'Camera 31', location: 'Gandhidham Rambaugh P2',             city: 'Kutch',        status: 'live', codec: 'H.264', container: 'mp4' },
 ];
 
-// Direct live feed player tile — Immediate loading, zero opacity blocking
-function CameraFeedTile({ cam, onFullScreen }: { cam: SentinelCamera; onFullScreen: (cam: SentinelCamera) => void }) {
+// Direct enlarged live feed player tile — Clips bottom site bar and expands video area
+function CameraFeedTile({
+  cam,
+  height,
+  onFullScreen
+}: {
+  cam: SentinelCamera;
+  height: number;
+  onFullScreen: (cam: SentinelCamera) => void;
+}) {
   return (
-    <div className="relative bg-[#081325] rounded-xl border border-slate-800 overflow-hidden group flex flex-col shadow-lg">
-      {/* Video Viewport Container */}
-      <div className="relative flex-1 min-h-0 bg-black overflow-hidden" style={{ height: 210 }}>
+    <div className="relative bg-[#081325] rounded-xl border border-slate-800 overflow-hidden group flex flex-col shadow-xl">
+      {/* Enlarged Video Viewport Container */}
+      <div className="relative flex-1 min-h-0 bg-black overflow-hidden" style={{ height }}>
 
-        {/* Sentinel Gujarat Official Player Page Iframe — Loads live stream instantly */}
+        {/* Sentinel Gujarat Official Player Page Iframe — Height extended to clip bottom bar */}
         <iframe
           src={`${SENTINEL_BASE}/camera/${encodeURIComponent(cam.id)}`}
           title={`${cam.name} - ${cam.location}`}
-          className="w-full h-full border-0 relative z-1"
+          className="w-full border-0 relative z-1"
+          style={{ height: 'calc(100% + 44px)' }}
           allow="autoplay; fullscreen"
         />
 
         {/* Live OSD Badge */}
-        <div className="absolute top-2 left-2 z-20 flex items-center space-x-1.5 bg-black/80 backdrop-blur-xs rounded px-2 py-0.5 pointer-events-none border border-slate-700/50">
+        <div className="absolute top-2.5 left-2.5 z-20 flex items-center space-x-1.5 bg-black/85 backdrop-blur-xs rounded-md px-2.5 py-1 pointer-events-none border border-slate-700/60 shadow">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span className="text-emerald-300 font-mono font-bold text-[9px]">LIVE</span>
+          <span className="text-emerald-300 font-mono font-bold text-[10px] tracking-wide">LIVE</span>
         </div>
 
         {/* Camera Number Badge */}
-        <div className="absolute top-2 right-2 z-20 bg-black/80 backdrop-blur-xs rounded px-2 py-0.5 pointer-events-none border border-slate-700/50">
-          <span className="text-slate-200 font-mono font-bold text-[9px]">CAM {cam.number}</span>
+        <div className="absolute top-2.5 right-2.5 z-20 bg-black/85 backdrop-blur-xs rounded-md px-2.5 py-1 pointer-events-none border border-slate-700/60 shadow">
+          <span className="text-slate-200 font-mono font-bold text-[10px]">CAM {cam.number}</span>
         </div>
 
-        {/* Fullscreen Button */}
+        {/* Fullscreen Action Button */}
         <button
           onClick={() => onFullScreen(cam)}
-          className="absolute bottom-2 right-2 z-20 p-1.5 bg-[#0052CC] text-white rounded hover:bg-blue-600 opacity-80 group-hover:opacity-100 transition shadow cursor-pointer"
+          className="absolute bottom-3 right-3 z-20 p-2 bg-[#0052CC] text-white rounded-lg hover:bg-blue-600 opacity-90 group-hover:opacity-100 transition shadow-lg cursor-pointer flex items-center space-x-1 font-bold text-[11px]"
           title="Open Fullscreen Feed"
         >
-          <Maximize2 className="w-3.5 h-3.5" />
+          <Maximize2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Enlarge</span>
         </button>
       </div>
 
       {/* Label Bar */}
-      <div className="px-3 py-2 bg-[#0d1f3c] border-t border-slate-800 flex items-center justify-between flex-shrink-0">
+      <div className="px-3.5 py-2.5 bg-[#0d1f3c] border-t border-slate-800 flex items-center justify-between flex-shrink-0">
         <div className="overflow-hidden pr-2">
-          <div className="text-xs font-bold text-white truncate font-mono">{cam.name}</div>
+          <div className="text-xs font-bold text-white truncate font-mono tracking-tight">{cam.name}</div>
           <div className="text-[10px] text-slate-400 truncate mt-0.5">{cam.location} • {cam.city}</div>
         </div>
-        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 font-mono border border-emerald-800 shrink-0 uppercase font-bold">
+        <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-mono border border-emerald-800 shrink-0 uppercase font-bold tracking-wider">
           {cam.codec}
         </span>
       </div>
@@ -117,6 +127,12 @@ export const SentinelLiveWallView: React.FC = () => {
   const totalPages = Math.ceil(SENTINEL_CAMERAS.length / pageSize);
   const displayedCameras = SENTINEL_CAMERAS.slice(page * pageSize, (page + 1) * pageSize);
 
+  // Dynamic Tile Heights based on Grid Size for Enlarged Display
+  const tileHeight =
+    gridSize === 2 ? 400 :
+    gridSize === 3 ? 340 :
+    260;
+
   const gridClass =
     gridSize === 2 ? 'grid-cols-1 md:grid-cols-2' :
     gridSize === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
@@ -135,7 +151,7 @@ export const SentinelLiveWallView: React.FC = () => {
             </span>
             <span className="text-emerald-400 font-mono text-[11px] font-bold flex items-center space-x-1">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>DIRECT LIVE FEED CONNECTED</span>
+              <span>ENLARGED HIGH-DEF VIEWPORT</span>
             </span>
           </div>
           <h1 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center space-x-3">
@@ -152,12 +168,13 @@ export const SentinelLiveWallView: React.FC = () => {
               <button
                 key={n}
                 onClick={() => { setGridSize(n); setPage(0); }}
-                className={`px-2.5 py-1 text-xs font-bold rounded transition cursor-pointer ${
+                className={`px-3 py-1 text-xs font-bold rounded transition cursor-pointer flex items-center space-x-1 ${
                   gridSize === n ? 'bg-[#0052CC] text-white' : 'text-slate-400 hover:text-white'
                 }`}
-                title={`${n}×${n} grid view`}
+                title={`${n}×${n} grid view (${n === 2 ? 'Large 400px' : n === 3 ? 'Medium 340px' : 'Compact 260px'})`}
               >
-                {n}×{n}
+                <span>{n}×{n}</span>
+                <span className="text-[9px] opacity-75 font-normal">({n === 2 ? 'Large' : n === 3 ? 'Mid' : 'Mini'})</span>
               </button>
             ))}
           </div>
@@ -188,9 +205,11 @@ export const SentinelLiveWallView: React.FC = () => {
           <div className="text-[10px] text-emerald-600 font-semibold">100% Active Streams</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Codec Engine</div>
-          <div className="text-xl font-black text-blue-700 font-mono mt-0.5">H.264 / HLS</div>
-          <div className="text-[10px] text-slate-500">Sentinel Official Engine</div>
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Viewport Mode</div>
+          <div className="text-xl font-black text-blue-700 font-mono mt-0.5">
+            {gridSize === 2 ? '2×2 Large (400px)' : gridSize === 3 ? '3×3 Mid (340px)' : '4×4 Mini (260px)'}
+          </div>
+          <div className="text-[10px] text-slate-500">Clipped Bottom Bar</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Coverage</div>
@@ -199,12 +218,13 @@ export const SentinelLiveWallView: React.FC = () => {
         </div>
       </div>
 
-      {/* Video Wall Grid */}
-      <div className={`grid ${gridClass} gap-4`}>
+      {/* Video Wall Grid — Enlarged Viewport */}
+      <div className={`grid ${gridClass} gap-4 sm:gap-5`}>
         {displayedCameras.map(cam => (
           <CameraFeedTile
             key={cam.id}
             cam={cam}
+            height={tileHeight}
             onFullScreen={setFullscreenCam}
           />
         ))}

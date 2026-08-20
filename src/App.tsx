@@ -279,24 +279,9 @@ function MainApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9] text-slate-900 flex flex-col font-sans selection:bg-[#0052CC] selection:text-white">
-      
-      {/* Top Official Dark Navy Header */}
-      <Header
-        currentLang={currentLang}
-        onLanguageChange={setCurrentLang}
-        unreadAlertsCount={alerts.filter(a => a.status === 'NEW').length}
-        onToggleNotifications={() => setIsNotificationsOpen(prev => !prev)}
-        onOpenSystemStatus={() => setIsSystemStatusOpen(true)}
-        onOpenSearch={() => setIsSearchModalOpen(true)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeTab={activeTab}
-        onNavigateTab={setActiveTab}
-        onLogout={() => setAppScreen('landing')}
-      />
+    <div className="h-screen bg-[#F4F6F9] text-slate-900 flex flex-row font-sans selection:bg-[#0052CC] selection:text-white overflow-hidden">
 
-      {/* Clean White Tab Navigation Bar */}
+      {/* LEFT: Vertical Sidebar Navigation */}
       <Navigation
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -305,8 +290,26 @@ function MainApp() {
         activeAlertsCount={alerts.filter(a => a.status === 'NEW').length}
       />
 
-      {/* Main Content Area Viewport - Full Widescreen Layout */}
-      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-5">
+      {/* RIGHT: Top Header + Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Top Slim Header Bar */}
+        <Header
+          currentLang={currentLang}
+          onLanguageChange={setCurrentLang}
+          unreadAlertsCount={alerts.filter(a => a.status === 'NEW').length}
+          onToggleNotifications={() => setIsNotificationsOpen(prev => !prev)}
+          onOpenSystemStatus={() => setIsSystemStatusOpen(true)}
+          onOpenSearch={() => setIsSearchModalOpen(true)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeTab={activeTab}
+          onNavigateTab={setActiveTab}
+          onLogout={() => setAppScreen('landing')}
+        />
+
+        {/* Main Content Area Viewport */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
         
         {/* MODEL 1: Overview */}
         {activeTab === 'overview' && (
@@ -547,8 +550,8 @@ function MainApp() {
       </main>
 
       {/* Official Government Footer */}
-      <footer className="w-full bg-[#00253E] border-t border-[#00385C] text-slate-300 py-6 px-4 sm:px-6 lg:px-8 mt-12 select-none">
-        <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+        <footer className="bg-[#00253E] border-t border-[#00385C] text-slate-300 py-4 px-4 sm:px-6 select-none flex-shrink-0">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
           
           {/* Left: Official Government Department Branding */}
           <div className="flex items-center space-x-3 text-center md:text-left">
@@ -585,7 +588,9 @@ function MainApp() {
           </div>
 
         </div>
-      </footer>
+        </footer>
+
+      </div> {/* end right column */}
 
       {/* Master Camera Detail Modal */}
       {selectedCameraForDetail && (

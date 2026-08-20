@@ -51,11 +51,11 @@ export const Header: React.FC<HeaderProps> = ({
   const userRoleLabel = ROLE_PERMISSIONS_MAP[currentRole]?.label || currentRole;
 
   return (
-    <header className="w-full bg-[#06152B] text-white border-b border-[#0D2342] select-none sticky top-0 z-40">
+    <header className="w-full bg-[#00253E] text-white border-b border-[#00385C] select-none sticky top-0 z-40">
       <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           
-          {/* Left: Mobile Menu Toggle & Logo */}
+          {/* Left: Mobile Menu Toggle & Official Emblem Logo */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               onClick={() => setIsMobileMenuOpen(p => !p)}
@@ -69,8 +69,8 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group shrink-0" 
               onClick={() => onNavigateTab('overview')}
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white p-1 flex items-center justify-center shadow-xs group-hover:scale-105 transition shrink-0">
-                <div className="w-full h-full rounded bg-[#0052CC] flex items-center justify-center text-white font-black text-xs">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white p-1 flex items-center justify-center shadow-xs shrink-0">
+                <div className="w-full h-full rounded bg-[#0052CC] flex items-center justify-center text-white font-bold text-xs">
                   <Video className="w-4 h-4 text-white" />
                 </div>
               </div>
@@ -78,34 +78,34 @@ export const Header: React.FC<HeaderProps> = ({
               <div>
                 <div className="flex items-center space-x-1.5">
                   <h1 className="text-xs sm:text-base font-bold text-white tracking-tight leading-tight">
-                    Z-TRACS <span className="font-light text-slate-400 hidden xs:inline">|</span> <span className="hidden sm:inline">Centralised CCTV Registry</span>
+                    Z-TRACS <span className="font-light text-slate-300 hidden xs:inline">|</span> <span className="hidden sm:inline">Centralised CCTV Registry</span>
                   </h1>
                 </div>
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">
-                  GUJARAT POLICE <span className="text-slate-500">|</span> <span className="hidden xs:inline">GOVERNMENT OF GUJARAT</span>
+                <p className="text-[9px] sm:text-[10px] text-slate-300 font-semibold tracking-wider uppercase mt-0.5">
+                  GUJARAT POLICE <span className="text-slate-400">|</span> <span className="hidden xs:inline">GOVERNMENT OF GUJARAT</span>
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Center: System Status Pill */}
+          {/* Center: Official Government System Status Pill */}
           <div className="hidden md:flex items-center space-x-3">
             <button
               onClick={onOpenSystemStatus}
-              className="flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[#08281D] hover:bg-[#0c3929] border border-[#14533C] text-[#22C55E] text-xs font-semibold shadow-xs transition cursor-pointer"
+              className="flex items-center space-x-2 px-3 py-1 rounded-md bg-[#00385C] hover:bg-[#004B7A] border border-[#004B7A] text-emerald-300 text-xs font-semibold shadow-xs transition cursor-pointer"
               title="Click to view Subsystem Diagnostics"
             >
-              <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse"></span>
-              <span className="tracking-wide uppercase text-[11px] font-bold">SYSTEM OPERATIONAL</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span className="tracking-wide uppercase text-[11px] font-bold text-white">SYSTEM OPERATIONAL</span>
             </button>
 
             <button
               onClick={onOpenSearch}
-              className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 text-xs rounded-full transition"
+              className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs rounded-md transition"
             >
               <Search className="w-3.5 h-3.5 text-slate-400" />
               <span>Global Search...</span>
-              <kbd className="px-1.5 py-0.2 bg-slate-900 text-[10px] font-mono rounded text-slate-400">⌘K</kbd>
+              <kbd className="px-1.5 py-0.2 bg-slate-900 text-[10px] font-mono rounded text-slate-300">⌘K</kbd>
             </button>
           </div>
 
@@ -115,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Mobile Search Icon */}
             <button 
               onClick={onOpenSearch}
-              className="lg:hidden p-1.5 text-slate-300 hover:text-white rounded-full hover:bg-slate-800/60 transition"
+              className="lg:hidden p-1.5 text-slate-300 hover:text-white rounded-full hover:bg-slate-800 transition"
               title="Global Search"
             >
               <Search className="w-4 h-4" />
@@ -124,31 +124,31 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Bell Icon with Notification Badge */}
             <button
               onClick={handleNotifyClick}
-              className="relative p-1.5 text-slate-300 hover:text-white rounded-full hover:bg-slate-800/60 transition"
+              className="relative p-1.5 text-slate-300 hover:text-white rounded-full hover:bg-slate-800 transition"
               title="System Alerts & Telemetry"
             >
               <Bell className="w-4 h-4" />
               {effectiveAlertCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#EF4444] ring-2 ring-[#06152B]"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-600 ring-2 ring-[#00253E]"></span>
               )}
             </button>
 
             {/* Logged-In User Profile Badge */}
-            <div className="relative pl-1.5 sm:pl-2 border-l border-slate-700/60">
+            <div className="relative pl-1.5 sm:pl-2 border-l border-slate-700">
               <button
                 onClick={() => setIsProfileDropdownOpen(p => !p)}
-                className="flex items-center space-x-2.5 p-1 rounded-lg hover:bg-slate-800/60 transition cursor-pointer"
+                className="flex items-center space-x-2.5 p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
               >
                 <img 
                   src={currentUser.avatar} 
                   alt={currentUser.name} 
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-1 ring-blue-400/60"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-1 ring-slate-400"
                 />
                 <div className="hidden lg:block text-left">
                   <div className="text-xs font-bold text-white leading-tight">
                     {currentUser.name}
                   </div>
-                  <div className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">
+                  <div className="text-[9px] font-semibold text-blue-300 uppercase tracking-wider">
                     {userRoleLabel}
                   </div>
                 </div>
@@ -193,8 +193,8 @@ export const Header: React.FC<HeaderProps> = ({
                       <span>{currentUser.district || 'Statewide Jurisdiction'}</span>
                     </div>
 
-                    <div className="flex items-center space-x-2 text-emerald-600 font-semibold text-[10px]">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <div className="flex items-center space-x-2 text-emerald-700 font-semibold text-[10px]">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span>Authenticated Session Active</span>
                     </div>
                   </div>
@@ -213,7 +213,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <LogOut className="w-4 h-4" />
                           <span>Sign Out / Log Out</span>
                         </span>
-                        <span className="text-[10px] text-rose-400 font-mono">Exit</span>
+                        <span className="text-[10px] text-rose-500 font-mono">Exit</span>
                       </button>
                     </div>
                   )}

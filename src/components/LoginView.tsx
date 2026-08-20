@@ -137,9 +137,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           </div>
         </div>
 
-        <span className="px-3 py-1 bg-[#08281D] border border-[#14533C] text-[#22C55E] text-xs font-bold rounded-full flex items-center space-x-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse"></span>
-          <span>4-ROLE RBAC SECURE PORTAL ACTIVE</span>
+        <span className="px-3 py-1 bg-[#00385C] border border-[#004B7A] text-emerald-300 text-xs font-bold rounded-md flex items-center space-x-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>OFFICIAL RBAC PORTAL ACTIVE</span>
         </span>
       </div>
 

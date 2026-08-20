@@ -236,7 +236,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     {showAiOverlay && (
                       <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-center items-center">
                         {/* Vehicle Box */}
-                        <div className="w-48 h-28 border-2 border-emerald-400 bg-emerald-500/10 rounded relative animate-pulse">
+                        <div className="w-48 h-28 border-2 border-blue-500 bg-blue-500/10 rounded relative">
                           <span className="absolute -top-5 left-0 bg-emerald-500 text-slate-950 font-mono text-[9px] font-bold px-1.5 py-0.2 rounded">
                             CAR • 96.4%
                           </span>

@@ -146,7 +146,7 @@ export const LiveStreamModal: React.FC<LiveStreamModalProps> = ({
           {showAiBoxes && camera.status !== 'offline' && (
             <>
               {/* Simulated Vehicle Bounding Box */}
-              <div className="absolute top-[32%] left-[24%] w-[26%] h-[28%] border-2 border-emerald-400 bg-emerald-500/10 rounded-sm pointer-events-none animate-pulse">
+              <div className="absolute top-[32%] left-[24%] w-[26%] h-[28%] border-2 border-blue-500 bg-blue-500/10 rounded-sm pointer-events-none">
                 <div className="absolute -top-5 left-0 bg-emerald-500 text-slate-950 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono shadow">
                   VEHICLE (GJ01-ER-4092) 98.4%
                 </div>

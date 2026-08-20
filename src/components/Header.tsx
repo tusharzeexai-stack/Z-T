@@ -6,7 +6,8 @@ import {
   Search,
   ChevronDown,
   Menu,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 import { Language, UserRole } from '../types';
 import { useRBAC, ROLE_PERMISSIONS_MAP } from '../context/RBACContext';
@@ -24,6 +25,7 @@ interface HeaderProps {
   unreadAlertsCount?: number;
   activeTab?: string;
   onNavigateTab?: (tab: string) => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   unreadAlertsCount = 3,
   activeTab = 'overview',
   onNavigateTab = (_tab: string) => {},
+  onLogout
 }) => {
   const effectiveAlertCount = unreadAlertCount || unreadAlertsCount;
   const handleNotifyClick = onToggleNotifications || onOpenNotifications || (() => {});
@@ -203,6 +206,22 @@ export const Header: React.FC<HeaderProps> = ({
                       );
                     })}
                   </div>
+
+                  {onLogout && (
+                    <div className="mt-2 pt-2 border-t border-slate-100">
+                      <button
+                        onClick={() => {
+                          setIsRoleDropdownOpen(false);
+                          onLogout();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg font-bold text-rose-600 hover:bg-rose-50 transition flex items-center space-x-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out / Log Out</span>
+                      </button>
+                    </div>
+                  )}
+
                 </div>
               )}
 

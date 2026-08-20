@@ -2,9 +2,11 @@ export type Language = 'en';
 
 export type UserRole = 
   | 'STATE_ADMIN'
+  | 'DISTRICT_ADMIN'
   | 'DEPARTMENT_ADMIN'
   | 'DISTRICT_OFFICER'
   | 'CONTROL_ROOM_OPERATOR'
+  | 'POLICE_OFFICER'
   | 'STATE_AUDITOR';
 
 export type CameraLifecycle = 

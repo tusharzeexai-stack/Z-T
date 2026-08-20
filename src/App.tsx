@@ -64,7 +64,7 @@ import { EventPipelineView } from './components/model3/EventPipelineView';
 
 function MainApp() {
   const { currentUser, currentRole } = useRBAC();
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Global Application State
   const [currentLang, setCurrentLang] = useState<Language>('en');
@@ -261,6 +261,7 @@ function MainApp() {
         onSearchChange={setSearchQuery}
         activeTab={activeTab}
         onNavigateTab={setActiveTab}
+        onLogout={() => setIsAuthenticated(false)}
       />
 
       {/* Clean White Tab Navigation Bar */}

@@ -1,33 +1,121 @@
 import React, { useState } from 'react';
-import { Shield, Lock, UserCheck, Video, KeyRound, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, UserCheck, Video, KeyRound, ArrowRight, CheckCircle2, ShieldCheck, UserCog, Radio, BadgeCheck } from 'lucide-react';
 import { UserRole, User } from '../types';
-import { INITIAL_USERS } from '../data/mockData';
-import { ROLE_PERMISSIONS_MAP } from '../context/RBACContext';
+import { useRBAC } from '../context/RBACContext';
 
 interface LoginViewProps {
   onLoginSuccess: (user: User) => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
-  const [selectedUserId, setSelectedUserId] = useState<string>(INITIAL_USERS[0].id);
-  const [badgeInput, setBadgeInput] = useState(INITIAL_USERS[0].badge);
+  const { switchUser } = useRBAC();
+
+  const rbacRolesList: {
+    role: UserRole;
+    title: string;
+    description: string;
+    icon: React.ElementType;
+    user: User;
+  }[] = [
+    {
+      role: 'STATE_ADMIN',
+      title: 'State Administrator',
+      description: 'Full statewide governance access across all departments, PostGIS maps, & system settings.',
+      icon: ShieldCheck,
+      user: {
+        id: 'usr-001',
+        name: 'Rajesh K. Sharma, IPS',
+        badge: 'GJ-POL-2018-09',
+        email: 'adgp.telecom@gujaratpolice.gov.in',
+        role: 'STATE_ADMIN',
+        departmentId: 'DEPT-POL-01',
+        departmentName: 'Gujarat Police (Traffic & Law Enforcement)',
+        district: 'Gandhinagar',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        status: 'ACTIVE',
+        lastLogin: '2026-08-20 10:35:12 IST',
+      }
+    },
+    {
+      role: 'DISTRICT_ADMIN',
+      title: 'District Administrator',
+      description: 'Administrative control scoped to assigned district cameras, municipal assets, & gap reports.',
+      icon: UserCog,
+      user: {
+        id: 'usr-002',
+        name: 'Smt. Mona Khandhar, IAS',
+        badge: 'GJ-IAS-2012-04',
+        email: 'securb@gujarat.gov.in',
+        role: 'DISTRICT_ADMIN',
+        departmentId: 'DEPT-MNC-02',
+        departmentName: 'Urban & Municipal Corporations',
+        district: 'Ahmedabad',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        status: 'ACTIVE',
+        lastLogin: '2026-08-20 09:12:44 IST',
+      }
+    },
+    {
+      role: 'CONTROL_ROOM_OPERATOR',
+      title: 'Control Room Operator',
+      description: 'Live multi-camera video wall, real-time alert triage, & camera telemetry monitoring.',
+      icon: Radio,
+      user: {
+        id: 'usr-004',
+        name: 'Insp. Vikram V. Solanki',
+        badge: 'GJ-POL-2020-108',
+        email: 'operator.controlroom@gujarat.gov.in',
+        role: 'CONTROL_ROOM_OPERATOR',
+        departmentId: 'DEPT-POL-01',
+        departmentName: 'Gujarat Police',
+        district: 'Surat',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+        status: 'ACTIVE',
+        lastLogin: '2026-08-20 10:30:15 IST',
+      }
+    },
+    {
+      role: 'POLICE_OFFICER',
+      title: 'Police Field Officer',
+      description: 'ANPR vehicle search, cross-camera journey tracking, & SHA-256 evidence vault.',
+      icon: BadgeCheck,
+      user: {
+        id: 'usr-003',
+        name: 'G. S. Malik, IPS',
+        badge: 'GJ-POL-2015-22',
+        email: 'cp.ahmedabad@gujaratpolice.gov.in',
+        role: 'POLICE_OFFICER',
+        departmentId: 'DEPT-POL-01',
+        departmentName: 'Gujarat Police',
+        district: 'Ahmedabad',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+        status: 'ACTIVE',
+        lastLogin: '2026-08-20 10:01:00 IST',
+      }
+    }
+  ];
+
+  const [selectedRoleIndex, setSelectedRoleIndex] = useState<number>(0);
+  const selectedPersona = rbacRolesList[selectedRoleIndex];
+
+  const [badgeInput, setBadgeInput] = useState(selectedPersona.user.badge);
   const [passwordInput, setPasswordInput] = useState('••••••••••••');
   const [isLoading, setIsLoading] = useState(false);
 
-  const selectedUser = INITIAL_USERS.find(u => u.id === selectedUserId) || INITIAL_USERS[0];
-
-  const handleUserSelect = (u: User) => {
-    setSelectedUserId(u.id);
-    setBadgeInput(u.badge);
+  const handleRoleSelect = (index: number) => {
+    setSelectedRoleIndex(index);
+    setBadgeInput(rbacRolesList[index].user.badge);
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     setTimeout(() => {
       setIsLoading(false);
-      onLoginSuccess(selectedUser);
-    }, 600);
+      switchUser(selectedPersona.user);
+      onLoginSuccess(selectedPersona.user);
+    }, 500);
   };
 
   return (
@@ -42,8 +130,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">Z-TRACS</h1>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">Z-TRACS</h1>
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
               GUJARAT POLICE • GOVERNMENT OF GUJARAT
             </p>
           </div>
@@ -51,82 +139,85 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
         <span className="px-3 py-1 bg-[#08281D] border border-[#14533C] text-[#22C55E] text-xs font-bold rounded-full flex items-center space-x-1.5">
           <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse"></span>
-          <span>SECURE PORTAL ACTIVE</span>
+          <span>4-ROLE RBAC SECURE PORTAL ACTIVE</span>
         </span>
       </div>
 
       {/* Main Login Box */}
-      <div className="max-w-4xl w-full mx-auto my-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+      <div className="max-w-5xl w-full mx-auto my-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
         {/* Left Col: Portal Description (Col 5) */}
-        <div className="md:col-span-5 text-white space-y-4">
+        <div className="lg:col-span-5 text-white space-y-4">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-900/60 border border-blue-700/60 text-blue-300 text-xs font-bold">
             <Shield className="w-3.5 h-3.5" />
-            <span>State CCTV Master Registry</span>
+            <span>Unified Video Intelligence Platform</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
-            Centralised Surveillance Infrastructure Registry
+            Centralised Surveillance Command Center
           </h2>
 
           <p className="text-xs text-slate-300 leading-relaxed">
-            Model 1 Statewide Asset Registry, GIS foundation, department inventory, health visibility, and audit ledger.
+            Statewide Asset Registry, GIS mapping, ANPR metadata analytics, multi-camera video walls, and VMS federation.
           </p>
 
           <div className="space-y-2 pt-2 text-xs text-slate-400">
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>Strict Role-Based Access Control (RBAC)</span>
+              <span>4-Role RBAC Authorization Engine</span>
             </div>
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>PostGIS Spatial Vector Layer Integration</span>
+              <span>PostGIS Spatial Vector GIS Layer</span>
             </div>
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>SHA-256 Tamper-Evident Audit Logging</span>
+              <span>Court-Compliant SHA-256 Evidence Vault</span>
             </div>
           </div>
         </div>
 
         {/* Right Col: Login Form Card (Col 7) */}
-        <div className="md:col-span-7 bg-white rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-200">
+        <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-200">
           
-          <div className="border-b border-slate-100 pb-4 mb-6">
+          <div className="border-b border-slate-100 pb-4 mb-5">
             <div className="flex items-center space-x-2 text-[#0052CC] font-bold text-xs uppercase tracking-wider">
               <Lock className="w-4 h-4" />
               <span>Official Operator Authentication</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mt-1">Select Persona & Login</h3>
+            <h3 className="text-lg font-bold text-slate-900 mt-1">Select 4-Role RBAC Persona</h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Choose one of the 5 standard RBAC roles to simulate portal access
+              Choose your official role to authenticate and enter the Z-TRACS dashboard
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4">
             
-            {/* Quick Role Selector */}
+            {/* 4 Role Selector Grid */}
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-2">Select User Account Role:</label>
+              <label className="text-xs font-bold text-slate-700 block mb-2">Select User Account Role (4 Roles):</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {INITIAL_USERS.map(u => {
-                  const perm = ROLE_PERMISSIONS_MAP[u.role];
-                  const isSelected = u.id === selectedUserId;
+                {rbacRolesList.map((item, index) => {
+                  const isSelected = index === selectedRoleIndex;
+                  const IconComp = item.icon;
                   return (
                     <button
                       type="button"
-                      key={u.id}
-                      onClick={() => handleUserSelect(u)}
+                      key={item.role}
+                      onClick={() => handleRoleSelect(index)}
                       className={`p-3 rounded-xl border text-left transition flex items-start space-x-2.5 ${
                         isSelected 
-                          ? 'border-[#0052CC] bg-blue-50/80 ring-2 ring-blue-500/20' 
+                          ? 'border-[#0052CC] bg-blue-50/90 ring-2 ring-blue-500/30' 
                           : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
                       }`}
                     >
-                      <img src={u.avatar} alt={u.name} className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5" />
+                      <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${isSelected ? 'bg-[#0052CC] text-white' : 'bg-slate-200 text-slate-600'}`}>
+                        <IconComp className="w-4 h-4" />
+                      </div>
                       <div>
-                        <div className="text-xs font-bold text-slate-900 leading-tight">{u.name}</div>
-                        <div className="text-[10px] font-semibold text-[#0052CC] font-mono mt-0.5">{perm.label}</div>
+                        <div className="text-xs font-bold text-slate-900 leading-tight">{item.title}</div>
+                        <div className="text-[10px] font-semibold text-[#0052CC] font-mono mt-0.5">{item.user.name.split(',')[0]}</div>
+                        <div className="text-[9px] text-slate-500 mt-0.5 line-clamp-1">{item.description}</div>
                       </div>
                     </button>
                   );
@@ -166,9 +257,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-[#0052CC] text-white rounded-xl text-xs font-bold hover:bg-[#0041A8] transition shadow-md flex items-center justify-center space-x-2"
+              className="w-full py-3 px-4 bg-[#0052CC] text-white rounded-xl text-xs font-bold hover:bg-[#0041A8] transition shadow-md flex items-center justify-center space-x-2 cursor-pointer"
             >
-              <span>{isLoading ? 'Authenticating Operator credentials...' : `Access Portal as ${ROLE_PERMISSIONS_MAP[selectedUser.role].label}`}</span>
+              <span>{isLoading ? 'Authenticating Credentials...' : `Log In to Dashboard as ${selectedPersona.title}`}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 

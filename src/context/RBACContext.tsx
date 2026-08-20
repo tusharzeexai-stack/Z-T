@@ -40,6 +40,24 @@ export const ROLE_PERMISSIONS_MAP: Record<UserRole, RolePermissions> = {
     districtScoped: false,
     departmentScoped: false,
   },
+  DISTRICT_ADMIN: {
+    role: 'DISTRICT_ADMIN',
+    label: 'District Administrator',
+    description: 'Administrative control restricted to assigned district cameras, onboarding, and gap analysis.',
+    canCreateCamera: true,
+    canEditCamera: true,
+    canArchiveCamera: true,
+    canRestoreCamera: true,
+    canMarkMaintenance: true,
+    canBulkImport: true,
+    canViewReports: true,
+    canExportReports: true,
+    canManageUsers: false,
+    canManageRoles: false,
+    canViewAuditLogs: true,
+    districtScoped: true,
+    departmentScoped: false,
+  },
   DEPARTMENT_ADMIN: {
     role: 'DEPARTMENT_ADMIN',
     label: 'Department Administrator',
@@ -79,7 +97,7 @@ export const ROLE_PERMISSIONS_MAP: Record<UserRole, RolePermissions> = {
   CONTROL_ROOM_OPERATOR: {
     role: 'CONTROL_ROOM_OPERATOR',
     label: 'Control Room Operator',
-    description: 'Operational health monitoring, telemetry visibility, and maintenance dispatching.',
+    description: 'Operational health monitoring, multi-camera video wall, and alert management.',
     canCreateCamera: false,
     canEditCamera: false,
     canArchiveCamera: false,
@@ -91,6 +109,24 @@ export const ROLE_PERMISSIONS_MAP: Record<UserRole, RolePermissions> = {
     canManageUsers: false,
     canManageRoles: false,
     canViewAuditLogs: false,
+    districtScoped: false,
+    departmentScoped: false,
+  },
+  POLICE_OFFICER: {
+    role: 'POLICE_OFFICER',
+    label: 'Police Field Officer',
+    description: 'ANPR vehicle search, cross-camera journey tracking, and SHA-256 evidence vault.',
+    canCreateCamera: false,
+    canEditCamera: false,
+    canArchiveCamera: false,
+    canRestoreCamera: false,
+    canMarkMaintenance: true,
+    canBulkImport: false,
+    canViewReports: true,
+    canExportReports: true,
+    canManageUsers: false,
+    canManageRoles: false,
+    canViewAuditLogs: true,
     districtScoped: false,
     departmentScoped: false,
   },
@@ -130,7 +166,7 @@ export const RBACProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]);
   const [currentRole, setCurrentRole] = useState<UserRole>(INITIAL_USERS[0].role);
 
-  const permissions = ROLE_PERMISSIONS_MAP[currentRole];
+  const permissions = ROLE_PERMISSIONS_MAP[currentRole] || ROLE_PERMISSIONS_MAP.STATE_ADMIN;
 
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
@@ -153,7 +189,7 @@ export const RBACProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const isResourceAllowed = (district?: string, departmentId?: string): boolean => {
-    if (currentRole === 'STATE_ADMIN' || currentRole === 'STATE_AUDITOR' || currentRole === 'CONTROL_ROOM_OPERATOR') {
+    if (currentRole === 'STATE_ADMIN' || currentRole === 'STATE_AUDITOR' || currentRole === 'CONTROL_ROOM_OPERATOR' || currentRole === 'POLICE_OFFICER') {
       return true;
     }
     if (permissions.districtScoped && district && currentUser.district) {

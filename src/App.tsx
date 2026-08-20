@@ -68,14 +68,75 @@ import { EventPipelineView } from './components/model3/EventPipelineView';
 
 function MainApp() {
   const { currentUser, currentRole } = useRBAC();
-  // 'landing' | 'login' | 'dashboard'
-  const [appScreen, setAppScreen] = useState<'landing' | 'login' | 'dashboard'>('landing');
+
+  // Helper to parse state from URL hash or localStorage
+  const parseNavState = () => {
+    const hash = window.location.hash.replace('#', '');
+    let screen: 'landing' | 'login' | 'dashboard' = 'landing';
+    let tab = 'overview';
+
+    if (hash) {
+      const parts = hash.split('/');
+      if (parts[0] === 'dashboard') {
+        screen = 'dashboard';
+        if (parts[1]) tab = parts[1];
+      } else if (parts[0] === 'login') {
+        screen = 'login';
+      } else if (parts[0] === 'landing') {
+        screen = 'landing';
+      }
+    } else {
+      try {
+        const savedScreen = localStorage.getItem('ztracs_screen') as any;
+        const savedTab = localStorage.getItem('ztracs_tab');
+        if (savedScreen && ['landing', 'login', 'dashboard'].includes(savedScreen)) {
+          screen = savedScreen;
+        }
+        if (savedTab) tab = savedTab;
+      } catch (_) {}
+    }
+    return { screen, tab };
+  };
+
+  const initialNav = parseNavState();
+  const [appScreen, setAppScreenState] = useState<'landing' | 'login' | 'dashboard'>(initialNav.screen);
+  const [activeTab, setActiveTabState] = useState<string>(initialNav.tab);
   const [loginRoleHint, setLoginRoleHint] = useState<string | undefined>(undefined);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  // Sync state changes with localStorage and URL Hash
+  const setAppScreen = (screen: 'landing' | 'login' | 'dashboard') => {
+    setAppScreenState(screen);
+    try {
+      localStorage.setItem('ztracs_screen', screen);
+      window.location.hash = screen === 'dashboard' ? `dashboard/${activeTab}` : screen;
+    } catch (_) {}
+  };
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('ztracs_tab', tab);
+      if (appScreen === 'dashboard') {
+        window.location.hash = `dashboard/${tab}`;
+      }
+    } catch (_) {}
+  };
+
+  // Sync state on hash change / browser back/forward buttons
+  useEffect(() => {
+    const handleHashChange = () => {
+      const nav = parseNavState();
+      setAppScreenState(nav.screen);
+      setActiveTabState(nav.tab);
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   // Global Application State
   const [currentLang, setCurrentLang] = useState<Language>('en');
-  const [activeTab, setActiveTab] = useState<string>('overview');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Cross-module filter & vehicle journey state

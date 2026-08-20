@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole, User } from '../types';
 import { INITIAL_USERS } from '../data/mockData';
 
@@ -163,24 +163,32 @@ interface RBACContextType {
 const RBACContext = createContext<RBACContextType | undefined>(undefined);
 
 export const RBACProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]);
-  const [currentRole, setCurrentRole] = useState<UserRole>(INITIAL_USERS[0].role);
+  // Restore logged-in user from localStorage on refresh
+  const getInitialUser = (): User => {
+    try {
+      const saved = localStorage.getItem('ztracs_user');
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return INITIAL_USERS[0];
+  };
+
+  const [currentUser, setCurrentUser] = useState<User>(getInitialUser);
+  const [currentRole, setCurrentRole] = useState<UserRole>(getInitialUser().role);
 
   const permissions = ROLE_PERMISSIONS_MAP[currentRole] || ROLE_PERMISSIONS_MAP.STATE_ADMIN;
 
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
     const matchedUser = INITIAL_USERS.find(u => u.role === role);
-    if (matchedUser) {
-      setCurrentUser(matchedUser);
-    } else {
-      setCurrentUser(prev => ({ ...prev, role }));
-    }
+    const newUser = matchedUser || { ...currentUser, role };
+    setCurrentUser(newUser);
+    try { localStorage.setItem('ztracs_user', JSON.stringify(newUser)); } catch (_) {}
   };
 
   const switchUser = (user: User) => {
     setCurrentUser(user);
     setCurrentRole(user.role);
+    try { localStorage.setItem('ztracs_user', JSON.stringify(user)); } catch (_) {}
   };
 
   const can = (action: keyof RolePermissions): boolean => {

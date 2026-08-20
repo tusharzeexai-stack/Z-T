@@ -1,0 +1,189 @@
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { UserRole, User } from '../types';
+import { INITIAL_USERS } from '../data/mockData';
+
+export interface RolePermissions {
+  role: UserRole;
+  label: string;
+  description: string;
+  canCreateCamera: boolean;
+  canEditCamera: boolean;
+  canArchiveCamera: boolean;
+  canRestoreCamera: boolean;
+  canMarkMaintenance: boolean;
+  canBulkImport: boolean;
+  canViewReports: boolean;
+  canExportReports: boolean;
+  canManageUsers: boolean;
+  canManageRoles: boolean;
+  canViewAuditLogs: boolean;
+  districtScoped: boolean;
+  departmentScoped: boolean;
+}
+
+export const ROLE_PERMISSIONS_MAP: Record<UserRole, RolePermissions> = {
+  STATE_ADMIN: {
+    role: 'STATE_ADMIN',
+    label: 'State Administrator',
+    description: 'Full statewide governance access across all departments, districts, and system settings.',
+    canCreateCamera: true,
+    canEditCamera: true,
+    canArchiveCamera: true,
+    canRestoreCamera: true,
+    canMarkMaintenance: true,
+    canBulkImport: true,
+    canViewReports: true,
+    canExportReports: true,
+    canManageUsers: true,
+    canManageRoles: true,
+    canViewAuditLogs: true,
+    districtScoped: false,
+    departmentScoped: false,
+  },
+  DEPARTMENT_ADMIN: {
+    role: 'DEPARTMENT_ADMIN',
+    label: 'Department Administrator',
+    description: 'Administrative control restricted to assigned department cameras, onboarding, and users.',
+    canCreateCamera: true,
+    canEditCamera: true,
+    canArchiveCamera: true,
+    canRestoreCamera: true,
+    canMarkMaintenance: true,
+    canBulkImport: true,
+    canViewReports: true,
+    canExportReports: true,
+    canManageUsers: false,
+    canManageRoles: false,
+    canViewAuditLogs: true,
+    districtScoped: false,
+    departmentScoped: true,
+  },
+  DISTRICT_OFFICER: {
+    role: 'DISTRICT_OFFICER',
+    label: 'District Officer',
+    description: 'Jurisdictional access scoped strictly to assigned district infrastructure and gap reporting.',
+    canCreateCamera: true,
+    canEditCamera: true,
+    canArchiveCamera: false,
+    canRestoreCamera: false,
+    canMarkMaintenance: true,
+    canBulkImport: false,
+    canViewReports: true,
+    canExportReports: true,
+    canManageUsers: false,
+    canManageRoles: false,
+    canViewAuditLogs: true,
+    districtScoped: true,
+    departmentScoped: false,
+  },
+  CONTROL_ROOM_OPERATOR: {
+    role: 'CONTROL_ROOM_OPERATOR',
+    label: 'Control Room Operator',
+    description: 'Operational health monitoring, telemetry visibility, and maintenance dispatching.',
+    canCreateCamera: false,
+    canEditCamera: false,
+    canArchiveCamera: false,
+    canRestoreCamera: false,
+    canMarkMaintenance: true,
+    canBulkImport: false,
+    canViewReports: true,
+    canExportReports: false,
+    canManageUsers: false,
+    canManageRoles: false,
+    canViewAuditLogs: false,
+    districtScoped: false,
+    departmentScoped: false,
+  },
+  STATE_AUDITOR: {
+    role: 'STATE_AUDITOR',
+    label: 'State Auditor',
+    description: 'Read-only compliance access for auditing, integrity verification, and report generation.',
+    canCreateCamera: false,
+    canEditCamera: false,
+    canArchiveCamera: false,
+    canRestoreCamera: false,
+    canMarkMaintenance: false,
+    canBulkImport: false,
+    canViewReports: true,
+    canExportReports: true,
+    canManageUsers: false,
+    canManageRoles: false,
+    canViewAuditLogs: true,
+    districtScoped: false,
+    departmentScoped: false,
+  },
+};
+
+interface RBACContextType {
+  currentUser: User;
+  currentRole: UserRole;
+  permissions: RolePermissions;
+  switchRole: (role: UserRole) => void;
+  switchUser: (user: User) => void;
+  can: (action: keyof RolePermissions) => boolean;
+  isResourceAllowed: (district?: string, departmentId?: string) => boolean;
+}
+
+const RBACContext = createContext<RBACContextType | undefined>(undefined);
+
+export const RBACProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]);
+  const [currentRole, setCurrentRole] = useState<UserRole>(INITIAL_USERS[0].role);
+
+  const permissions = ROLE_PERMISSIONS_MAP[currentRole];
+
+  const switchRole = (role: UserRole) => {
+    setCurrentRole(role);
+    const matchedUser = INITIAL_USERS.find(u => u.role === role);
+    if (matchedUser) {
+      setCurrentUser(matchedUser);
+    } else {
+      setCurrentUser(prev => ({ ...prev, role }));
+    }
+  };
+
+  const switchUser = (user: User) => {
+    setCurrentUser(user);
+    setCurrentRole(user.role);
+  };
+
+  const can = (action: keyof RolePermissions): boolean => {
+    const val = permissions[action];
+    return typeof val === 'boolean' ? val : false;
+  };
+
+  const isResourceAllowed = (district?: string, departmentId?: string): boolean => {
+    if (currentRole === 'STATE_ADMIN' || currentRole === 'STATE_AUDITOR' || currentRole === 'CONTROL_ROOM_OPERATOR') {
+      return true;
+    }
+    if (permissions.districtScoped && district && currentUser.district) {
+      return district.toLowerCase() === currentUser.district.toLowerCase();
+    }
+    if (permissions.departmentScoped && departmentId && currentUser.departmentId) {
+      return departmentId === currentUser.departmentId;
+    }
+    return true;
+  };
+
+  return (
+    <RBACContext.Provider value={{
+      currentUser,
+      currentRole,
+      permissions,
+      switchRole,
+      switchUser,
+      can,
+      isResourceAllowed,
+    }}>
+      {children}
+    </RBACContext.Provider>
+  );
+};
+
+export const useRBAC = (): RBACContextType => {
+  const context = useContext(RBACContext);
+  if (!context) {
+    throw new Error('useRBAC must be used within an RBACProvider');
+  }
+  return context;
+};

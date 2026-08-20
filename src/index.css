@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --gov-navy-dark: #00253e;
+    --gov-navy-header: #002b48;
+    --gov-navy-deep: #081a2e;
+    --gov-blue-primary: #0072ce;
+    --gov-blue-hover: #005bb5;
+    --gov-blue-light: #e8f2fe;
+    --gov-blue-border: #bcd7f9;
+    --gov-gold: #e69a0b;
+    --gov-gold-dark: #b45309;
+    --gov-red: #d9222a;
+    --gov-bg-gray: #f4f6f9;
+    --gov-card-bg: #ffffff;
+    --gov-border: #e2e8f0;
+    --gov-text-main: #0f172a;
+    --gov-text-muted: #64748b;
+  }
+
+  body {
+    background-color: #f4f6f9;
+    color: #0f172a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+}
+
+/* Government Portal Theming Utilities */
+.bg-gov-navy {
+  background-color: #00253e;
+}
+
+.bg-gov-navy-header {
+  background-color: #002b48;
+}
+
+.bg-gov-blue {
+  background-color: #0072ce;
+}
+
+.hover\:bg-gov-blue-hover:hover {
+  background-color: #005bb5;
+}
+
+.bg-gov-blue-light {
+  background-color: #e8f2fe;
+}
+
+.border-gov-blue-light {
+  border-color: #bcd7f9;
+}
+
+.text-gov-blue {
+  color: #0072ce;
+}
+
+.text-gov-navy {
+  color: #00253e;
+}
+
+.bg-gov-red {
+  background-color: #d9222a;
+}
+
+.bg-gov-gold {
+  background-color: #e69a0b;
+}
+
+.text-gov-gold {
+  color: #d97706;
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0072ce;
+}

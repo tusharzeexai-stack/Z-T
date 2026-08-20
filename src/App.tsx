@@ -243,7 +243,20 @@ function MainApp() {
   };
 
   if (!isAuthenticated) {
-    return <LoginView onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return (
+      <LoginView 
+        onLoginSuccess={(loggedInUser) => {
+          setIsAuthenticated(true);
+          if (loggedInUser.role === 'CONTROL_ROOM_OPERATOR') {
+            setActiveTab('command-center');
+          } else if (loggedInUser.role === 'POLICE_OFFICER') {
+            setActiveTab('anpr-search');
+          } else {
+            setActiveTab('overview');
+          }
+        }} 
+      />
+    );
   }
 
   return (

@@ -56,6 +56,9 @@ import { VehicleJourneyView } from './components/VehicleJourneyView';
 import { AlertCenterView } from './components/AlertCenterView';
 import { InvestigationView } from './components/InvestigationView';
 
+// Sentinel Gujarat Live Wall
+import { SentinelLiveWallView } from './components/SentinelLiveWallView';
+
 // Model 3 Feature Views
 import { FederationOverviewView } from './components/model3/FederationOverviewView';
 import { VmsManagementView } from './components/model3/VmsManagementView';
@@ -329,6 +332,11 @@ function MainApp() {
             onSelectCamera={(cam) => setSelectedCameraForDetail(cam)}
             onNavigateTab={setActiveTab}
           />
+        )}
+
+        {/* SENTINEL GUJARAT: Live CCTV Feed Wall (31 cameras) */}
+        {activeTab === 'sentinel-live-wall' && (
+          <SentinelLiveWallView />
         )}
 
         {/* MODEL 2: ANPR Search Engine */}

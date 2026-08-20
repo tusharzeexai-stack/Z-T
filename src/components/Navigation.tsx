@@ -6,6 +6,7 @@ export type NavTab =
   | 'overview'
   | 'command-center'
   | 'live-view'
+  | 'sentinel-live-wall'
   | 'anpr-search'
   | 'vehicle-journey'
   | 'alerts'
@@ -37,31 +38,31 @@ interface NavigationProps {
 
 const ROLE_ALLOWED_TABS: Record<UserRole, NavTab[]> = {
   STATE_ADMIN: [
-    'overview', 'command-center', 'live-view', 'anpr-search', 'vehicle-journey',
+    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
     'alerts', 'investigations', 'federation-overview', 'vms-management', 'connectors',
     'event-flow', 'gis', 'registry', 'onboarding', 'health', 'departments',
     'districts', 'gap-analysis', 'reports', 'administration', 'audit'
   ],
   DISTRICT_ADMIN: [
-    'overview', 'command-center', 'live-view', 'anpr-search', 'vehicle-journey',
+    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
     'alerts', 'gis', 'registry', 'onboarding', 'health', 'districts',
     'gap-analysis', 'reports', 'administration', 'audit'
   ],
   DEPARTMENT_ADMIN: [
-    'overview', 'command-center', 'live-view', 'gis', 'registry', 'onboarding',
+    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'gis', 'registry', 'onboarding',
     'health', 'departments', 'reports', 'administration', 'audit'
   ],
   DISTRICT_OFFICER: [
-    'overview', 'command-center', 'live-view', 'anpr-search', 'vehicle-journey',
+    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
     'alerts', 'gis', 'registry', 'health', 'districts', 'gap-analysis', 'reports'
   ],
   CONTROL_ROOM_OPERATOR: [
-    'command-center', 'live-view', 'anpr-search', 'vehicle-journey',
+    'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
     'alerts', 'gis', 'health'
   ],
   POLICE_OFFICER: [
     'anpr-search', 'vehicle-journey', 'alerts', 'investigations',
-    'command-center', 'live-view', 'gis', 'registry', 'reports', 'audit'
+    'command-center', 'live-view', 'sentinel-live-wall', 'gis', 'registry', 'reports', 'audit'
   ],
   STATE_AUDITOR: [
     'overview', 'gis', 'registry', 'health', 'reports', 'audit'
@@ -82,6 +83,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'overview', label: 'Overview' },
     { id: 'command-center', label: 'Command Center', highlight: true },
     { id: 'live-view', label: 'Live Wall' },
+    { id: 'sentinel-live-wall', label: '🔴 Sentinel Live (31)' },
     { id: 'anpr-search', label: 'ANPR Search' },
     { id: 'vehicle-journey', label: 'Vehicle Journey' },
     { id: 'alerts', label: 'Alert Center', badge: activeAlertsCount },

@@ -58,29 +58,31 @@ export const CameraRegistryView: React.FC<CameraRegistryViewProps> = ({
   const [modalTargetCamera, setModalTargetCamera] = useState<Camera | null>(null);
   const [modalMode, setModalMode] = useState<'archive' | 'restore'>('archive');
 
-  // Filtered dataset
-  const filteredCameras = cameras.filter(cam => {
-    // Exclude archived by default unless filtering for it
-    if (selectedLifecycle === 'ALL' && cam.lifecycle === 'ARCHIVED') return false;
-    if (selectedLifecycle !== 'ALL' && cam.lifecycle !== selectedLifecycle) return false;
+  // Filtered dataset memoized for 80,000 node scale
+  const filteredCameras = React.useMemo(() => {
+    return cameras.filter(cam => {
+      // Exclude archived by default unless filtering for it
+      if (selectedLifecycle === 'ALL' && cam.lifecycle === 'ARCHIVED') return false;
+      if (selectedLifecycle !== 'ALL' && cam.lifecycle !== selectedLifecycle) return false;
 
-    if (selectedDept !== 'ALL' && cam.departmentId !== selectedDept) return false;
-    if (selectedDistrict !== 'ALL' && cam.district !== selectedDistrict) return false;
-    if (selectedHealth !== 'ALL' && cam.healthStatus !== selectedHealth) return false;
-    if (selectedType !== 'ALL' && cam.type !== selectedType) return false;
+      if (selectedDept !== 'ALL' && cam.departmentId !== selectedDept) return false;
+      if (selectedDistrict !== 'ALL' && cam.district !== selectedDistrict) return false;
+      if (selectedHealth !== 'ALL' && cam.healthStatus !== selectedHealth) return false;
+      if (selectedType !== 'ALL' && cam.type !== selectedType) return false;
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        cam.cameraCode.toLowerCase().includes(q) ||
-        cam.name.toLowerCase().includes(q) ||
-        cam.district.toLowerCase().includes(q) ||
-        cam.manufacturer.toLowerCase().includes(q) ||
-        cam.departmentName.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          cam.cameraCode.toLowerCase().includes(q) ||
+          cam.name.toLowerCase().includes(q) ||
+          cam.district.toLowerCase().includes(q) ||
+          cam.manufacturer.toLowerCase().includes(q) ||
+          cam.departmentName.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [cameras, selectedLifecycle, selectedDept, selectedDistrict, selectedHealth, selectedType, searchQuery]);
 
   // Calculate pages
   const totalPages = Math.ceil(filteredCameras.length / itemsPerPage) || 1;

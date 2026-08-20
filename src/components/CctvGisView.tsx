@@ -66,23 +66,25 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
 
-  // Filtered cameras dataset
-  const activeCameras = cameras.filter(cam => {
-    if (cam.lifecycle === 'ARCHIVED') return false;
-    if (selectedDept !== 'ALL' && cam.departmentId !== selectedDept) return false;
-    if (selectedDistrict !== 'ALL' && cam.district !== selectedDistrict) return false;
-    if (selectedStatus !== 'ALL' && cam.healthStatus !== selectedStatus) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        cam.cameraCode.toLowerCase().includes(q) ||
-        cam.name.toLowerCase().includes(q) ||
-        cam.district.toLowerCase().includes(q) ||
-        cam.departmentName.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  // Filtered cameras dataset memoized for 80,000 node scale
+  const activeCameras = React.useMemo(() => {
+    return cameras.filter(cam => {
+      if (cam.lifecycle === 'ARCHIVED') return false;
+      if (selectedDept !== 'ALL' && cam.departmentId !== selectedDept) return false;
+      if (selectedDistrict !== 'ALL' && cam.district !== selectedDistrict) return false;
+      if (selectedStatus !== 'ALL' && cam.healthStatus !== selectedStatus) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          cam.cameraCode.toLowerCase().includes(q) ||
+          cam.name.toLowerCase().includes(q) ||
+          cam.district.toLowerCase().includes(q) ||
+          cam.departmentName.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [cameras, selectedDept, selectedDistrict, selectedStatus, searchQuery]);
 
   // Helper for custom Leaflet divIcon
   const createCustomMarkerIcon = (status: CameraHealthStatus, isSelected: boolean) => {
@@ -158,37 +160,54 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     tileLayerRef.current.setUrl(TILE_LAYERS[activeTileLayerKey].url);
   }, [activeTileLayerKey]);
 
-  // Sync Markers on Map when activeCameras or selectedCamera changes
+  // Sync Markers on Map with Spatial Viewport Bounding Box (Max 500 DOM markers on screen)
   useEffect(() => {
     if (!mapInstanceRef.current || !markersGroupRef.current) return;
+    const map = mapInstanceRef.current;
 
-    markersGroupRef.current.clearLayers();
+    const renderViewportMarkers = () => {
+      if (!markersGroupRef.current || !mapInstanceRef.current) return;
+      markersGroupRef.current.clearLayers();
 
-    activeCameras.forEach(cam => {
-      const isSelected = selectedCamera?.cameraUuid === cam.cameraUuid;
-      const icon = createCustomMarkerIcon(cam.healthStatus, isSelected);
+      const bounds = map.getBounds();
+      // Render only cameras inside the current map viewport, capped at 500 for 60FPS
+      const visible = activeCameras
+        .filter(c => bounds.contains([c.latitude, c.longitude]))
+        .slice(0, 500);
 
-      const marker = L.marker([cam.latitude, cam.longitude], { icon });
+      visible.forEach(cam => {
+        const isSelected = selectedCamera?.cameraUuid === cam.cameraUuid;
+        const icon = createCustomMarkerIcon(cam.healthStatus, isSelected);
 
-      const popupContent = `
-        <div style="font-family: sans-serif; font-size: 12px; padding: 2px;">
-          <div style="font-weight: bold; font-family: monospace; color: #0052CC;">${cam.cameraCode}</div>
-          <div style="font-weight: bold; color: #0F172A; margin-top: 2px;">${cam.name}</div>
-          <div style="color: #64748B; font-size: 11px; margin-top: 2px;">${cam.district} • ${cam.departmentName}</div>
-          <div style="margin-top: 6px; font-weight: bold; color: ${cam.healthStatus === 'ONLINE' ? '#166534' : '#991B1B'};">
-            Status: ${cam.healthStatus} (${cam.fps} FPS)
+        const marker = L.marker([cam.latitude, cam.longitude], { icon });
+
+        const popupContent = `
+          <div style="font-family: sans-serif; font-size: 12px; padding: 2px;">
+            <div style="font-weight: bold; font-family: monospace; color: #0052CC;">${cam.cameraCode}</div>
+            <div style="font-weight: bold; color: #0F172A; margin-top: 2px;">${cam.name}</div>
+            <div style="color: #64748B; font-size: 11px; margin-top: 2px;">${cam.district} • ${cam.departmentName}</div>
+            <div style="margin-top: 6px; font-weight: bold; color: ${cam.healthStatus === 'ONLINE' ? '#166534' : '#991B1B'};">
+              Status: ${cam.healthStatus} (${cam.fps} FPS)
+            </div>
           </div>
-        </div>
-      `;
+        `;
 
-      marker.bindPopup(popupContent);
-
-      marker.on('click', () => {
-        setSelectedCamera(cam);
+        marker.bindPopup(popupContent);
+        marker.on('click', () => setSelectedCamera(cam));
+        markersGroupRef.current?.addLayer(marker);
       });
+    };
 
-      markersGroupRef.current?.addLayer(marker);
-    });
+    renderViewportMarkers();
+
+    // Re-render markers on map pan/zoom for smooth 80k node navigation
+    map.on('moveend', renderViewportMarkers);
+    map.on('zoomend', renderViewportMarkers);
+
+    return () => {
+      map.off('moveend', renderViewportMarkers);
+      map.off('zoomend', renderViewportMarkers);
+    };
   }, [activeCameras, selectedCamera]);
 
   // Center map on selected camera when row clicked

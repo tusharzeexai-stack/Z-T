@@ -523,25 +523,41 @@ function MainApp() {
       </main>
 
       {/* Official Government Footer */}
-      <footer className="w-full bg-white border-t border-slate-200 py-4 px-4 sm:px-6 lg:px-8 mt-10 select-none">
-        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <footer className="w-full bg-[#00253E] border-t border-[#00385C] text-slate-300 py-6 px-4 sm:px-6 lg:px-8 mt-12 select-none">
+        <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
           
-          <div className="flex flex-col sm:flex-row items-center sm:space-x-3 text-center sm:text-left">
-            <span className="px-3 py-1 bg-[#EEF2F6] text-slate-700 font-medium rounded-full text-xs shadow-2xs">
-              Z-TRACS Unified Platform Suite (Model 1 + Model 2 + Model 3)
+          {/* Left: Official Government Department Branding */}
+          <div className="flex items-center space-x-3 text-center md:text-left">
+            <div className="w-8 h-8 rounded-lg bg-white/10 border border-slate-700 p-1 flex items-center justify-center shrink-0">
+              <span className="text-[#0072CE] font-black text-xs">GJ</span>
+            </div>
+            <div>
+              <div className="font-bold text-white tracking-wide">
+                GUJARAT POLICE DEPARTMENT <span className="text-slate-500 font-normal">|</span> GOVERNMENT OF GUJARAT
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5">
+                Centralised CCTV Infrastructure & Video Intelligence Command Center
+              </div>
+            </div>
+          </div>
+
+          {/* Center: System Status & Security Level Tag */}
+          <div className="flex items-center space-x-4 text-[11px] text-slate-400">
+            <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-[#00385C] border border-[#004B7A] text-emerald-300 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>STATE WAN CONNECTED (10.142.0.0/16)</span>
             </span>
-            <span className="text-slate-500 text-xs mt-1 sm:mt-0">
-              © 2026 Gujarat Police Department. Official Internal Command Mesh.
+            <span className="hidden lg:inline text-slate-500">
+              RESTRICTED GOVERNMENT SYSTEM
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-slate-600 font-medium">
-            <button onClick={() => setActiveTab('command-center')} className="hover:text-slate-900 transition">Command Center</button>
-            <button onClick={() => setActiveTab('federation-overview')} className="hover:text-slate-900 transition">Federation</button>
-            <button onClick={() => setActiveTab('vms-management')} className="hover:text-slate-900 transition">VMS Systems</button>
-            <button onClick={() => setActiveTab('anpr-search')} className="hover:text-slate-900 transition">ANPR Search</button>
-            <button onClick={() => setActiveTab('vehicle-journey')} className="hover:text-slate-900 transition">Vehicle Journey</button>
-            <button onClick={() => setIsAuthenticated(false)} className="text-rose-600 font-bold hover:underline transition">Logout ({currentRole})</button>
+          {/* Right: Copyright & Compliance */}
+          <div className="text-center md:text-right text-[11px] text-slate-400">
+            <div>© 2026 Government of Gujarat. All Rights Reserved.</div>
+            <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+              PostGIS Spatial Engine • Keycloak OIDC • SHA-256 Audit
+            </div>
           </div>
 
         </div>

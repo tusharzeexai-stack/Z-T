@@ -48,6 +48,7 @@ import { NotificationDrawer } from './components/NotificationDrawer';
 import { SystemStatusOverlay } from './components/SystemStatusOverlay';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { LoginView } from './components/LoginView';
+import { LandingPage } from './components/LandingPage';
 
 // Model 2 Feature Views
 import { CommandCenterView } from './components/CommandCenterView';
@@ -67,7 +68,9 @@ import { EventPipelineView } from './components/model3/EventPipelineView';
 
 function MainApp() {
   const { currentUser, currentRole } = useRBAC();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // 'landing' | 'login' | 'dashboard'
+  const [appScreen, setAppScreen] = useState<'landing' | 'login' | 'dashboard'>('landing');
+  const [loginRoleHint, setLoginRoleHint] = useState<string | undefined>(undefined);
 
   // Global Application State
   const [currentLang, setCurrentLang] = useState<Language>('en');
@@ -245,11 +248,24 @@ function MainApp() {
     setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a));
   };
 
-  if (!isAuthenticated) {
+  if (appScreen === 'landing') {
     return (
-      <LoginView 
+      <LandingPage
+        onNavigateToLogin={(hint) => {
+          setLoginRoleHint(hint);
+          setAppScreen('login');
+        }}
+      />
+    );
+  }
+
+  if (appScreen === 'login') {
+    return (
+      <LoginView
+        defaultRoleHint={loginRoleHint}
+        onBack={() => setAppScreen('landing')}
         onLoginSuccess={(loggedInUser) => {
-          setIsAuthenticated(true);
+          setAppScreen('dashboard');
           if (loggedInUser.role === 'CONTROL_ROOM_OPERATOR') {
             setActiveTab('command-center');
           } else if (loggedInUser.role === 'POLICE_OFFICER') {
@@ -257,7 +273,7 @@ function MainApp() {
           } else {
             setActiveTab('overview');
           }
-        }} 
+        }}
       />
     );
   }
@@ -277,7 +293,7 @@ function MainApp() {
         onSearchChange={setSearchQuery}
         activeTab={activeTab}
         onNavigateTab={setActiveTab}
-        onLogout={() => setIsAuthenticated(false)}
+        onLogout={() => setAppScreen('landing')}
       />
 
       {/* Clean White Tab Navigation Bar */}

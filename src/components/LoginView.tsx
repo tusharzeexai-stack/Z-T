@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Shield, Lock, UserCheck, Video, KeyRound, ArrowRight,
+  Shield, Lock, UserCheck, KeyRound, ArrowRight,
   ShieldCheck, UserCog, Radio, BadgeCheck, Eye, EyeOff,
-  AlertTriangle, Clock, Globe, Building2, ChevronRight
+  AlertTriangle, Clock, Globe, ChevronRight, ArrowLeft,
+  CheckCircle2, Monitor, Users, Building2, FileText
 } from 'lucide-react';
 import { UserRole, User } from '../types';
 import { useRBAC } from '../context/RBACContext';
 
 interface LoginViewProps {
   onLoginSuccess: (user: User) => void;
+  onBack: () => void;
+  defaultRoleHint?: string;
 }
 
-export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
+export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack, defaultRoleHint }) => {
   const { switchUser } = useRBAC();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [selectedRoleIndex, setSelectedRoleIndex] = useState<number>(0);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -27,103 +30,90 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const rbacRolesList: {
     role: UserRole;
     title: string;
-    titleHi: string;
+    titleGu: string;
+    designation: string;
     description: string;
     accessLevel: string;
+    accessColor: string;
     icon: React.ElementType;
-    color: string;
     user: User;
   }[] = [
     {
       role: 'STATE_ADMIN',
       title: 'State Administrator',
-      titleHi: 'રાજ્ય વહીવટકર્તા',
-      description: 'Full statewide governance, all departments, system configuration',
-      accessLevel: 'LEVEL 5 — TOP SECRET',
+      titleGu: 'રાજ્ય વહીવટકર્તા',
+      designation: 'IPS / IAS — State Level',
+      description: 'Full statewide governance, all districts, departments, system configuration, and reporting.',
+      accessLevel: 'LEVEL 5 — MOST PRIVILEGED',
+      accessColor: '#7B0000',
       icon: ShieldCheck,
-      color: '#1a3a6b',
       user: {
-        id: 'usr-001',
-        name: 'Rajesh K. Sharma, IPS',
-        badge: 'GJ-POL-2018-09',
-        email: 'adgp.telecom@gujaratpolice.gov.in',
-        role: 'STATE_ADMIN',
-        departmentId: 'DEPT-POL-01',
-        departmentName: 'Gujarat Police (Traffic & Law Enforcement)',
+        id: 'usr-001', name: 'Rajesh K. Sharma, IPS', badge: 'GJ-POL-2018-09',
+        email: 'adgp.telecom@gujaratpolice.gov.in', role: 'STATE_ADMIN',
+        departmentId: 'DEPT-POL-01', departmentName: 'Gujarat Police (Traffic & Law Enforcement)',
         district: 'Gandhinagar',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-        status: 'ACTIVE',
-        lastLogin: '2026-08-20 10:35:12 IST',
+        status: 'ACTIVE', lastLogin: '2026-08-20 10:35:12 IST',
       }
     },
     {
       role: 'DISTRICT_ADMIN',
       title: 'District Administrator',
-      titleHi: 'જિલ્લા વહીવટકર્તા',
-      description: 'District-scoped admin, cameras, gap reports, municipal assets',
+      titleGu: 'જિલ્લા વહીવટકર્તા',
+      designation: 'IAS / District Collector',
+      description: 'District-scoped admin, cameras, gap analysis, municipal assets, onboarding.',
       accessLevel: 'LEVEL 4 — RESTRICTED',
+      accessColor: '#0a4a2a',
       icon: UserCog,
-      color: '#1a4a3a',
       user: {
-        id: 'usr-002',
-        name: 'Smt. Mona Khandhar, IAS',
-        badge: 'GJ-IAS-2012-04',
-        email: 'securb@gujarat.gov.in',
-        role: 'DISTRICT_ADMIN',
-        departmentId: 'DEPT-MNC-02',
-        departmentName: 'Urban & Municipal Corporations',
+        id: 'usr-002', name: 'Smt. Mona Khandhar, IAS', badge: 'GJ-IAS-2012-04',
+        email: 'securb@gujarat.gov.in', role: 'DISTRICT_ADMIN',
+        departmentId: 'DEPT-MNC-02', departmentName: 'Urban & Municipal Corporations',
         district: 'Ahmedabad',
         avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-        status: 'ACTIVE',
-        lastLogin: '2026-08-20 09:12:44 IST',
+        status: 'ACTIVE', lastLogin: '2026-08-20 09:12:44 IST',
       }
     },
     {
       role: 'CONTROL_ROOM_OPERATOR',
       title: 'Control Room Operator',
-      titleHi: 'કંટ્રોલ રૂમ ઓપરેટર',
-      description: 'Live video wall, alert triage, camera telemetry monitoring',
+      titleGu: 'કંટ્રોલ રૂમ ઓપરેટર',
+      designation: 'Inspector / Sub-Inspector',
+      description: 'Live 24×7 video wall monitoring, real-time alert triage, camera telemetry.',
       accessLevel: 'LEVEL 3 — CONFIDENTIAL',
+      accessColor: '#1a3a6b',
       icon: Radio,
-      color: '#3a2a1a',
       user: {
-        id: 'usr-004',
-        name: 'Insp. Vikram V. Solanki',
-        badge: 'GJ-POL-2020-108',
-        email: 'operator.controlroom@gujarat.gov.in',
-        role: 'CONTROL_ROOM_OPERATOR',
-        departmentId: 'DEPT-POL-01',
-        departmentName: 'Gujarat Police',
+        id: 'usr-004', name: 'Insp. Vikram V. Solanki', badge: 'GJ-POL-2020-108',
+        email: 'operator.controlroom@gujarat.gov.in', role: 'CONTROL_ROOM_OPERATOR',
+        departmentId: 'DEPT-POL-01', departmentName: 'Gujarat Police',
         district: 'Surat',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-        status: 'ACTIVE',
-        lastLogin: '2026-08-20 10:30:15 IST',
+        status: 'ACTIVE', lastLogin: '2026-08-20 10:30:15 IST',
       }
     },
     {
       role: 'POLICE_OFFICER',
       title: 'Police Field Officer',
-      titleHi: 'પોલીસ ક્ષેત્ર અધિકારી',
-      description: 'ANPR search, vehicle journey tracking, evidence vault access',
+      titleGu: 'પોલીસ ક્ષેત્ર અધિકારી',
+      designation: 'ASI / Constable / HC',
+      description: 'ANPR vehicle search, cross-camera journey tracking, SHA-256 evidence vault.',
       accessLevel: 'LEVEL 3 — CONFIDENTIAL',
+      accessColor: '#2a1a50',
       icon: BadgeCheck,
-      color: '#2a1a3a',
       user: {
-        id: 'usr-003',
-        name: 'G. S. Malik, IPS',
-        badge: 'GJ-POL-2015-22',
-        email: 'cp.ahmedabad@gujaratpolice.gov.in',
-        role: 'POLICE_OFFICER',
-        departmentId: 'DEPT-POL-01',
-        departmentName: 'Gujarat Police',
+        id: 'usr-003', name: 'G. S. Malik, IPS', badge: 'GJ-POL-2015-22',
+        email: 'cp.ahmedabad@gujaratpolice.gov.in', role: 'POLICE_OFFICER',
+        departmentId: 'DEPT-POL-01', departmentName: 'Gujarat Police',
         district: 'Ahmedabad',
         avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-        status: 'ACTIVE',
-        lastLogin: '2026-08-20 10:01:00 IST',
+        status: 'ACTIVE', lastLogin: '2026-08-20 10:01:00 IST',
       }
     }
   ];
 
+  const defaultIdx = rbacRolesList.findIndex(r => r.role === defaultRoleHint);
+  const [selectedRoleIndex, setSelectedRoleIndex] = useState<number>(defaultIdx >= 0 ? defaultIdx : 0);
   const selectedPersona = rbacRolesList[selectedRoleIndex];
   const [badgeInput, setBadgeInput] = useState(selectedPersona.user.badge);
   const [passwordInput, setPasswordInput] = useState('');
@@ -138,6 +128,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setLoginError('');
     if (!badgeInput.trim()) { setLoginError('Employee / Badge ID is required.'); return; }
+    if (!agreedToTerms) { setLoginError('Please acknowledge the terms of access to continue.'); return; }
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
@@ -146,250 +137,249 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     }, 1200);
   };
 
-  const dateStr = currentTime.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const timeStr = currentTime.toLocaleTimeString('en-IN', { hour12: false });
+  const dateStr = currentTime.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="min-h-screen flex flex-col font-sans select-none" style={{ background: 'linear-gradient(160deg, #0a1628 0%, #0d1f3c 40%, #0a1628 100%)' }}>
+    <div className="min-h-screen flex flex-col font-sans bg-slate-50 select-none">
 
-      {/* ── GOI-style Top Tricolor Bar ── */}
-      <div className="flex h-1.5 w-full flex-shrink-0">
+      {/* ── GOI Tricolor Top Bar ── */}
+      <div className="flex h-1.5 flex-shrink-0">
         <div className="flex-1" style={{ background: '#FF9933' }}></div>
-        <div className="flex-1" style={{ background: '#FFFFFF' }}></div>
+        <div className="flex-1 bg-white"></div>
         <div className="flex-1" style={{ background: '#138808' }}></div>
       </div>
 
-      {/* ── Official GOI Top Navigation Bar ── */}
-      <div className="bg-[#1a2744] border-b border-[#243560] py-2 px-6 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center space-x-4 text-[11px] text-slate-300 font-medium">
-          <span className="flex items-center space-x-1.5">
-            <Globe className="w-3 h-3 text-slate-400" />
-            <span>Government of Gujarat — Official Portal</span>
-          </span>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-400">Screen Reader Access</span>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-400">Skip to Main Content</span>
-        </div>
-        <div className="flex items-center space-x-3 text-[11px] text-slate-300">
-          <span className="flex items-center space-x-1.5">
-            <Clock className="w-3 h-3 text-slate-400" />
+      {/* ── Accessibility Bar ── */}
+      <div className="bg-[#1a2744] border-b border-[#243560] py-1.5 px-4 flex-shrink-0">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] text-slate-300">
+          <div className="flex items-center space-x-3">
+            <span className="flex items-center space-x-1.5 font-semibold">
+              <Globe className="w-3 h-3" />
+              <span>Government of Gujarat — Official Portal</span>
+            </span>
+            <span className="text-slate-600">|</span>
+            <a href="#" className="text-slate-400 hover:text-white">Skip to Main Content</a>
+          </div>
+          <div className="flex items-center space-x-2 text-slate-400">
+            <Clock className="w-3 h-3" />
             <span className="font-mono">{timeStr} IST</span>
-          </span>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-400 text-[10px]">{dateStr}</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-[10px] hidden sm:inline">{dateStr}</span>
+          </div>
         </div>
       </div>
 
-      {/* ── Portal Header with Emblem ── */}
-      <div className="bg-[#14224a] border-b border-[#1e2e5a] py-5 px-6 flex-shrink-0">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      {/* ── Portal Header ── */}
+      <div className="bg-white border-b border-slate-200 shadow-sm flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {/* Back to Home */}
+            <button
+              onClick={onBack}
+              className="flex items-center space-x-1.5 text-[#0052CC] text-xs font-semibold hover:underline transition"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to Portal</span>
+            </button>
 
-          {/* Left: Emblem + Title */}
-          <div className="flex items-center space-x-5">
-            {/* Govt Emblem Placeholder */}
-            <div className="w-16 h-16 rounded-full bg-[#0052CC] border-2 border-[#3373d1] flex items-center justify-center shadow-xl flex-shrink-0">
-              <div className="text-center">
-                <Shield className="w-8 h-8 text-white mx-auto" />
+            <div className="w-px h-8 bg-slate-200"></div>
+
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-[#0052CC] flex items-center justify-center shadow">
+                <Shield className="w-5 h-5 text-white" />
               </div>
-            </div>
-            <div>
-              <div className="text-[10px] font-bold text-amber-400 uppercase tracking-[0.2em] mb-0.5">
-                भारत सरकार · Government of India
-              </div>
-              <h1 className="text-xl font-black text-white tracking-tight leading-tight">
-                Z-TRACS — Centralised Video Surveillance System
-              </h1>
-              <div className="text-[11px] text-slate-300 mt-0.5 font-medium">
-                Gujarat Police • Home Department • Government of Gujarat
+              <div>
+                <div className="text-base font-black text-[#0052CC] leading-tight">Z-TRACS</div>
+                <div className="text-[9px] text-slate-500">Gujarat Police • Govt. of Gujarat</div>
               </div>
             </div>
           </div>
 
-          {/* Right: Logos / portal badges */}
-          <div className="hidden md:flex flex-col items-end space-y-2">
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded bg-emerald-900/50 border border-emerald-700/60 text-emerald-300 text-[10px] font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>SYSTEM OPERATIONAL</span>
-            </div>
-            <div className="flex items-center space-x-2 text-[10px] text-slate-400">
-              <Building2 className="w-3 h-3" />
-              <span>NIC Hosted • ISO 27001:2022 Certified</span>
-            </div>
+          <div className="hidden md:flex items-center space-x-2 text-[11px] text-slate-500">
+            <Building2 className="w-3.5 h-3.5" />
+            <span>NIC Hosted • ISO 27001:2022</span>
+            <span className="ml-3 px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold rounded text-[10px]">● SYSTEM ONLINE</span>
           </div>
+        </div>
 
+        {/* Blue classification banner */}
+        <div className="bg-[#0052CC] py-2 px-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-center space-x-3 text-white text-[11px] font-bold">
+            <Shield className="w-3.5 h-3.5 text-white/70" />
+            <span className="uppercase tracking-widest">Secure Authentication — For Authorised Government Personnel Only</span>
+            <Shield className="w-3.5 h-3.5 text-white/70" />
+          </div>
         </div>
       </div>
 
       {/* ── Breadcrumb ── */}
-      <div className="bg-[#0f1b38] border-b border-[#192240] py-2 px-6 flex-shrink-0">
-        <div className="max-w-6xl mx-auto flex items-center space-x-1.5 text-[11px] text-slate-400">
-          <span>Home</span>
+      <div className="bg-[#f0f4f8] border-b border-slate-200 py-2 px-4 flex-shrink-0">
+        <div className="max-w-7xl mx-auto flex items-center space-x-1.5 text-[11px] text-slate-500">
+          <button onClick={onBack} className="hover:text-[#0052CC] transition">Home</button>
           <ChevronRight className="w-3 h-3" />
           <span>Secure Login</span>
           <ChevronRight className="w-3 h-3" />
-          <span className="text-amber-400 font-semibold">RBAC Authentication Portal</span>
+          <span className="text-[#0052CC] font-semibold">RBAC Authentication Portal</span>
         </div>
       </div>
 
-      {/* ── Main Content ── */}
-      <div className="flex-1 flex items-center justify-center py-8 px-4">
-        <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* ── MAIN LOGIN CONTENT ── */}
+      <main className="flex-1 py-8 px-4">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* ── LEFT INFO PANEL ── */}
-          <div className="lg:col-span-5 text-white space-y-6">
+          <div className="lg:col-span-4 space-y-5">
 
-            {/* Notice Box */}
-            <div className="bg-amber-900/20 border border-amber-700/40 rounded-lg p-4 flex items-start space-x-3">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            {/* Authorised Access Warning */}
+            <div className="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-4 flex items-start space-x-3">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-amber-300 text-xs font-bold">AUTHORISED ACCESS ONLY</p>
-                <p className="text-amber-200/80 text-[11px] mt-1 leading-relaxed">
-                  This system is for authorised Government officials only. All access is logged, monitored, and subject to the IT Act 2000, Section 66.
+                <p className="text-amber-800 font-black text-xs uppercase tracking-wider">Authorised Access Only</p>
+                <p className="text-amber-700/80 text-[11px] mt-1 leading-relaxed">
+                  This system is for authorised Government employees only. All access is logged and subject to IT Act 2000, Section 66.
                 </p>
               </div>
             </div>
 
-            {/* Portal Description */}
-            <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-3 flex items-center space-x-2">
-                <div className="flex-1 h-px bg-slate-700"></div>
-                <span>About This Portal</span>
-                <div className="flex-1 h-px bg-slate-700"></div>
-              </div>
-              <p className="text-slate-300 text-xs leading-relaxed">
-                The <strong className="text-white">Z-TRACS Unified Video Intelligence Platform</strong> provides centralised access to statewide CCTV camera networks, live video walls, ANPR metadata analytics, GIS mapping, and VMS federation across all Gujarat districts.
-              </p>
+            {/* Login instructions */}
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100">How to Login</h3>
+              <ol className="space-y-3">
+                {[
+                  { n: 1, text: 'Select your official role from the 4 available roles' },
+                  { n: 2, text: 'Enter your Government-issued Employee / Badge ID' },
+                  { n: 3, text: 'Enter your Passphrase or Smart Card PIN' },
+                  { n: 4, text: 'Acknowledge the Terms of Access and click Login' },
+                ].map(s => (
+                  <li key={s.n} className="flex items-start space-x-3">
+                    <div className="w-5 h-5 rounded-full bg-[#0052CC] text-white text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{s.n}</div>
+                    <span className="text-[11px] text-slate-600 leading-relaxed">{s.text}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
 
-            {/* Feature List */}
-            <div className="space-y-2.5">
-              {[
-                { icon: '🔐', label: 'Role-Based Access Control (RBAC)', sub: '4-tier hierarchical authorisation' },
-                { icon: '🗺️', label: 'PostGIS Spatial Vector GIS', sub: '12,482 cameras mapped statewide' },
-                { icon: '🚗', label: 'ANPR Vehicle Intelligence', sub: 'AI-powered plate recognition & journey' },
-                { icon: '🔒', label: 'SHA-256 Evidence Vault', sub: 'Court-compliant forensic chain of custody' },
-                { icon: '📡', label: 'Live VMS Federation', sub: 'Multi-vendor camera system integration' },
-              ].map(f => (
-                <div key={f.label} className="flex items-start space-x-3 bg-[#1a2744]/60 border border-[#243560]/80 rounded-lg px-3 py-2.5">
-                  <span className="text-base mt-0.5">{f.icon}</span>
-                  <div>
-                    <div className="text-white text-[11px] font-bold">{f.label}</div>
-                    <div className="text-slate-400 text-[10px]">{f.sub}</div>
+            {/* Security Features */}
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-3">Security Standards</h3>
+              <div className="space-y-2">
+                {[
+                  'TLS 1.3 End-to-End Encryption',
+                  'Multi-Factor Authentication Ready',
+                  'ISO 27001:2022 Certified Infra',
+                  'Full Audit Trail Maintained',
+                  'NIC Data Centre Hosted',
+                ].map(f => (
+                  <div key={f} className="flex items-center space-x-2 text-[11px] text-slate-600">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>{f}</span>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            {/* NIC Footer Notice */}
-            <div className="border-t border-slate-800 pt-4 text-[10px] text-slate-500 space-y-0.5 leading-relaxed">
-              <p>⚠ Unauthorised access is a criminal offence under the IT Act 2000.</p>
-              <p>🔒 This connection is encrypted with TLS 1.3.</p>
-              <p>🖥 Best viewed in Chrome 120+ / Edge 120+ at 1280px resolution.</p>
+            {/* Help */}
+            <div className="bg-[#EEF4FF] border border-blue-200 rounded-xl p-4 text-xs text-[#0052CC]">
+              <div className="font-bold mb-1">Need Help?</div>
+              <p className="text-[11px] text-blue-700 leading-relaxed">
+                Contact NIC Help Desk:<br/>
+                📞 1800-233-5500 (Toll Free)<br/>
+                📧 helpdesk@nic.in
+              </p>
             </div>
           </div>
 
-          {/* ── RIGHT: LOGIN FORM ── */}
-          <div className="lg:col-span-7">
-
-            {/* Card */}
-            <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+          {/* ── RIGHT: LOGIN FORM CARD ── */}
+          <div className="lg:col-span-8">
+            <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
 
               {/* Card Header */}
-              <div className="bg-[#1a2744] px-6 py-4 flex items-center justify-between">
+              <div className="bg-[#0d1f3c] px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#0052CC] flex items-center justify-center shadow">
-                    <Lock className="w-4.5 h-4.5 text-white w-5 h-5" />
+                  <div className="w-10 h-10 rounded-lg bg-[#0052CC] flex items-center justify-center shadow-md">
+                    <Lock className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-white font-bold text-sm">Secure Operator Login</div>
-                    <div className="text-slate-400 text-[10px]">RBAC Authentication • Restricted Access</div>
+                    <div className="text-white font-black text-sm">Official Operator Authentication</div>
+                    <div className="text-slate-400 text-[11px]">Z-TRACS Secure Login • Role-Based Access Control</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[9px] text-slate-500 uppercase tracking-wider">Session</div>
-                  <div className="font-mono text-[10px] text-emerald-400">ENCRYPTED</div>
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-[9px] text-slate-500 uppercase tracking-wider">Connection</span>
+                  <span className="font-mono text-[11px] text-emerald-400 font-bold">🔒 SECURED</span>
                 </div>
               </div>
 
-              {/* Divider with classification */}
-              <div className="bg-[#0052CC] py-1.5 px-6 flex items-center justify-center space-x-2">
-                <Shield className="w-3 h-3 text-white/80" />
-                <span className="text-white text-[10px] font-bold tracking-widest uppercase">
-                  Official Government Portal — For Authorised Personnel Only
-                </span>
-                <Shield className="w-3 h-3 text-white/80" />
-              </div>
+              <form onSubmit={handleLogin} className="p-6 sm:p-8 space-y-6">
 
-              <div className="p-6 sm:p-7">
-                <form onSubmit={handleLogin} className="space-y-5">
-
-                  {/* Step 1: Role Selection */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                {/* STEP 1: ROLE SELECTION */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
                         Step 1 — Select Your Official Role
                       </label>
-                      <span className="text-[10px] text-slate-400 font-mono bg-slate-100 px-2 py-0.5 rounded">4 Roles</span>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Choose the role that matches your official designation</p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {rbacRolesList.map((item, index) => {
-                        const isSelected = index === selectedRoleIndex;
-                        const IconComp = item.icon;
-                        return (
-                          <button
-                            type="button"
-                            key={item.role}
-                            onClick={() => handleRoleSelect(index)}
-                            className={`group text-left rounded-lg border-2 transition-all duration-150 overflow-hidden ${
-                              isSelected
-                                ? 'border-[#0052CC] shadow-md'
-                                : 'border-slate-200 hover:border-slate-300'
-                            }`}
-                          >
-                            {/* Role Card Top Bar */}
-                            <div className={`px-3 py-1.5 flex items-center justify-between ${isSelected ? 'bg-[#0052CC]' : 'bg-slate-100 group-hover:bg-slate-200'} transition`}>
-                              <div className="flex items-center space-x-1.5">
-                                <IconComp className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-slate-600'}`} />
-                                <span className={`text-[10px] font-black uppercase tracking-wider ${isSelected ? 'text-white' : 'text-slate-600'}`}>
-                                  {item.title}
-                                </span>
-                              </div>
-                              {isSelected && (
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-                              )}
-                            </div>
-                            {/* Role Card Body */}
-                            <div className={`px-3 py-2 ${isSelected ? 'bg-blue-50' : 'bg-white'} transition`}>
-                              <div className="text-[10px] font-semibold text-slate-500 mb-0.5">{item.titleHi}</div>
-                              <div className="text-[10px] font-bold text-slate-800 font-mono mb-1">{item.user.name}</div>
-                              <div className={`text-[9px] font-bold uppercase tracking-wider inline-block px-1.5 py-0.5 rounded ${
-                                isSelected ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'
-                              }`}>
-                                {item.accessLevel}
-                              </div>
-                              <div className="text-[9px] text-slate-500 mt-1 leading-tight line-clamp-1">{item.description}</div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <span className="text-[10px] font-bold text-[#0052CC] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">4 Roles</span>
                   </div>
 
-                  {/* Horizontal Divider */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-dashed border-slate-200"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-white px-3 text-[10px] text-slate-400 uppercase tracking-wider font-bold">Step 2 — Enter Credentials</span>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {rbacRolesList.map((item, index) => {
+                      const isSelected = index === selectedRoleIndex;
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          type="button"
+                          key={item.role}
+                          onClick={() => handleRoleSelect(index)}
+                          className={`text-left rounded-xl border-2 overflow-hidden transition-all duration-150 ${
+                            isSelected ? 'border-[#0052CC] shadow-md ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                          }`}
+                        >
+                          {/* Role Title Bar */}
+                          <div className={`px-4 py-2.5 flex items-center justify-between transition ${isSelected ? 'bg-[#0052CC]' : 'bg-slate-100'}`}>
+                            <div className="flex items-center space-x-2">
+                              <IconComp className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-600'}`} />
+                              <span className={`text-[11px] font-black uppercase tracking-wide ${isSelected ? 'text-white' : 'text-slate-700'}`}>
+                                {item.title}
+                              </span>
+                            </div>
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-emerald-300"></span>}
+                          </div>
+                          {/* Role Body */}
+                          <div className={`px-4 py-3 ${isSelected ? 'bg-blue-50' : 'bg-white'} transition`}>
+                            <div className="text-[10px] text-slate-500 mb-1">{item.titleGu} · {item.designation}</div>
+                            <div className="text-[10px] font-mono font-bold text-slate-800 mb-1.5">{item.user.name}</div>
+                            <div className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase" style={{ background: item.accessColor + '18', color: item.accessColor, border: `1px solid ${item.accessColor}40` }}>
+                              {item.accessLevel}
+                            </div>
+                            <p className="text-[9px] text-slate-400 mt-1.5 leading-tight line-clamp-2">{item.description}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
+                </div>
 
-                  {/* Badge / Employee ID */}
+                {/* DIVIDER */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t-2 border-dashed border-slate-200"></div>
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-white px-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Step 2 — Enter Credentials</span>
+                  </div>
+                </div>
+
+                {/* CREDENTIALS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Badge ID */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1.5 uppercase tracking-wider">
-                      Employee ID / Badge Number
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Employee ID / Badge Number <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <UserCheck className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -399,16 +389,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                         value={badgeInput}
                         onChange={e => { setBadgeInput(e.target.value); setLoginError(''); }}
                         placeholder="e.g. GJ-POL-2018-09"
-                        className="w-full pl-9 pr-3 py-2.5 bg-white border-2 border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-[#0052CC] focus:ring-2 focus:ring-blue-100 transition placeholder:font-normal placeholder:text-slate-400"
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-[#0052CC] focus:ring-2 focus:ring-blue-100 transition"
                         autoComplete="username"
                       />
                     </div>
+                    <p className="text-[10px] text-slate-400 mt-1">Format: GJ-{'{'}DEPT{'}'}-YYYY-NN</p>
                   </div>
 
                   {/* Passphrase */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1.5 uppercase tracking-wider">
-                      Passphrase / Smart Card PIN
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Passphrase / Smart Card PIN <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -417,151 +408,129 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                         id="password-input"
                         value={passwordInput}
                         onChange={e => { setPasswordInput(e.target.value); setLoginError(''); }}
-                        placeholder="Enter your secure passphrase"
-                        className="w-full pl-9 pr-10 py-2.5 bg-white border-2 border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0052CC] focus:ring-2 focus:ring-blue-100 transition placeholder:font-normal placeholder:text-slate-400"
+                        placeholder="Enter secure passphrase"
+                        className="w-full pl-9 pr-10 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0052CC] focus:ring-2 focus:ring-blue-100 transition"
                         autoComplete="current-password"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(p => !p)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
-                        tabIndex={-1}
-                      >
+                      <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition" tabIndex={-1}>
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    <p className="text-[10px] text-slate-400 mt-1">Min. 8 characters • Case sensitive</p>
                   </div>
+                </div>
 
-                  {/* Error */}
-                  {loginError && (
-                    <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium">
-                      <AlertTriangle className="w-4 h-4 shrink-0" />
-                      <span>{loginError}</span>
-                    </div>
+                {/* SELECTED USER PREVIEW */}
+                <div className="flex items-center space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <img
+                    src={selectedPersona.user.avatar}
+                    alt={selectedPersona.user.name}
+                    className="w-10 h-10 rounded-full border-2 border-[#0052CC] object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-slate-900 truncate">{selectedPersona.user.name}</div>
+                    <div className="text-[10px] text-slate-500 truncate">{selectedPersona.user.email}</div>
+                    <div className="text-[10px] font-mono text-[#0052CC] font-bold">{selectedPersona.user.badge} · {selectedPersona.user.district}</div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-[9px] text-slate-400">Last Login</div>
+                    <div className="text-[10px] font-mono text-slate-600">{selectedPersona.user.lastLogin?.slice(11, 19)}</div>
+                  </div>
+                </div>
+
+                {/* ERROR */}
+                {loginError && (
+                  <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>{loginError}</span>
+                  </div>
+                )}
+
+                {/* TERMS ACKNOWLEDGEMENT */}
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={e => setAgreedToTerms(e.target.checked)}
+                      className="mt-0.5 flex-shrink-0 accent-[#0052CC] w-4 h-4 cursor-pointer"
+                    />
+                    <span className="text-[11px] text-amber-800 leading-relaxed">
+                      I am an authorised Government employee. I acknowledge that this system is monitored, all access is logged, and unauthorised use is punishable under the <strong>Information Technology Act, 2000 (Section 66)</strong> and applicable Government policies.
+                    </span>
+                  </label>
+                </div>
+
+                {/* SUBMIT BUTTON */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  id="login-submit-btn"
+                  className="w-full py-3.5 rounded-xl text-sm font-black text-white flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{ background: isLoading ? '#6b7280' : 'linear-gradient(90deg, #003399 0%, #0052CC 60%, #0066FF 100%)' }}
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      <span>Authenticating Credentials — Please wait…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      <span>Login as {selectedPersona.title}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
                   )}
+                </button>
 
-                  {/* Terms Acknowledgement */}
-                  <div className="flex items-start space-x-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <input type="checkbox" id="agree-terms" defaultChecked className="mt-0.5 accent-[#0052CC]" required />
-                    <label htmlFor="agree-terms" className="text-[10px] text-amber-800 leading-relaxed cursor-pointer">
-                      I acknowledge that I am an authorised Government employee and that my access is being logged and monitored in accordance with the <strong>IT Act 2000</strong> and applicable Government policies.
-                    </label>
-                  </div>
+                {/* HELP LINKS */}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                  <a href="#" className="hover:text-[#0052CC] transition hover:underline">Forgot Badge ID?</a>
+                  <a href="#" className="hover:text-[#0052CC] transition hover:underline">Reset Password</a>
+                  <a href="#" className="hover:text-[#0052CC] transition hover:underline">NIC Help Desk</a>
+                  <a href="#" className="hover:text-[#0052CC] transition hover:underline">IT Grievance</a>
+                </div>
 
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    id="login-submit-btn"
-                    className="w-full py-3 px-6 rounded-lg text-sm font-bold text-white flex items-center justify-center space-x-2.5 transition-all duration-200 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
-                    style={{
-                      background: isLoading
-                        ? '#6b7280'
-                        : 'linear-gradient(90deg, #0041A8 0%, #0052CC 50%, #0066FF 100%)',
-                    }}
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                        </svg>
-                        <span>Authenticating — Please wait…</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-4 h-4" />
-                        <span>Login as {selectedPersona.title}</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-
-                  {/* Help Links */}
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-                    <a href="#" className="hover:text-[#0052CC] transition underline-offset-2 hover:underline">Forgot Badge ID / Password?</a>
-                    <span className="text-slate-300">|</span>
-                    <a href="#" className="hover:text-[#0052CC] transition underline-offset-2 hover:underline">Contact NIC Help Desk</a>
-                    <span className="text-slate-300">|</span>
-                    <a href="#" className="hover:text-[#0052CC] transition underline-offset-2 hover:underline">IT Grievance</a>
-                  </div>
-
-                </form>
-              </div>
+              </form>
 
               {/* Card Footer */}
-              <div className="bg-slate-50 border-t border-slate-200 px-6 py-3 flex items-center justify-between">
+              <div className="bg-slate-50 border-t border-slate-200 px-6 py-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-2 text-[10px] text-slate-500">
                   <Lock className="w-3 h-3 text-slate-400" />
-                  <span>TLS 1.3 Encrypted Connection</span>
+                  <span>TLS 1.3 Encrypted • Compliant with CERT-In Guidelines</span>
                 </div>
-                <div className="flex items-center space-x-2 text-[10px] text-slate-500">
-                  <span>Version 3.4.1</span>
-                  <span>•</span>
-                  <span>NIC MeitY Hosted</span>
-                </div>
+                <div className="text-[10px] text-slate-400">v3.4.1 • NIC MeitY Hosted</div>
               </div>
-
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      {/* ── Official Footer ── */}
-      <div className="bg-[#0d1527] border-t border-[#1a2540] mt-4 flex-shrink-0">
-        {/* Top Footer */}
-        <div className="max-w-6xl mx-auto px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <div className="text-white font-bold text-xs uppercase tracking-wider mb-2">Gujarat Police</div>
-            <div className="text-slate-400 text-[10px] leading-relaxed">
-              Police Headquarters, Sector 18,<br/>
-              Gandhinagar — 382 018, Gujarat, India<br/>
-              📞 100 / 1090 / 1091
-            </div>
-          </div>
-          <div>
-            <div className="text-white font-bold text-xs uppercase tracking-wider mb-2">Home Department</div>
-            <div className="text-slate-400 text-[10px] leading-relaxed">
-              Government of Gujarat<br/>
-              Sachivalaya, Gandhinagar — 382 010<br/>
-              🌐 www.gujarat.gov.in
-            </div>
-          </div>
-          <div>
-            <div className="text-white font-bold text-xs uppercase tracking-wider mb-2">Technical Support</div>
-            <div className="text-slate-400 text-[10px] leading-relaxed">
-              NIC Gujarat State Centre<br/>
-              Bloc No. 16, CGO Complex, Sector 10A<br/>
-              📧 support.nic-gujarat@nic.in
             </div>
           </div>
         </div>
+      </main>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-[#1a2540] bg-[#090f1e]">
-          {/* Tricolor bar bottom */}
-          <div className="flex h-1 w-full">
-            <div className="flex-1" style={{ background: '#FF9933' }}></div>
-            <div className="flex-1" style={{ background: '#FFFFFF' }}></div>
-            <div className="flex-1" style={{ background: '#138808' }}></div>
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#0d1f3c] border-t border-[#1a2f55] mt-4 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-[11px] text-slate-400 text-center sm:text-left">
+            © 2026 Gujarat Police Department & Government of Gujarat. All rights reserved.
           </div>
-          <div className="max-w-6xl mx-auto px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="text-[10px] text-slate-500">
-              © 2026 Gujarat Police Department & Government of Gujarat. All rights reserved.
-            </div>
-            <div className="flex items-center space-x-3 text-[10px] text-slate-500">
-              <a href="#" className="hover:text-slate-300 transition">Privacy Policy</a>
-              <span>|</span>
-              <a href="#" className="hover:text-slate-300 transition">Terms of Use</a>
-              <span>|</span>
-              <a href="#" className="hover:text-slate-300 transition">Accessibility</a>
-              <span>|</span>
-              <a href="#" className="hover:text-slate-300 transition">Site Map</a>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
+            {['Privacy Policy', 'Terms of Use', 'Accessibility', 'Sitemap', 'Contact'].map((l, i) => (
+              <React.Fragment key={l}>
+                {i > 0 && <span className="text-slate-700">|</span>}
+                <a href="#" className="hover:text-slate-300 transition">{l}</a>
+              </React.Fragment>
+            ))}
           </div>
         </div>
-      </div>
+        {/* Bottom tricolor */}
+        <div className="flex h-1">
+          <div className="flex-1" style={{ background: '#FF9933' }}></div>
+          <div className="flex-1 bg-white"></div>
+          <div className="flex-1" style={{ background: '#138808' }}></div>
+        </div>
+      </footer>
 
     </div>
   );

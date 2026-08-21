@@ -1,39 +1,76 @@
 import React, { useState } from 'react';
+import { Camera } from '../types';
 import { 
   Video, 
   CheckCircle2, 
   AlertTriangle, 
-  XCircle, 
-  Wrench, 
+  Building2, 
   MapPin, 
-  MoreVertical, 
-  ArrowRight,
-  Building2,
-  SlidersHorizontal,
-  Database,
-  LayoutGrid,
-  TrendingUp,
+  Eye, 
+  Activity, 
+  Layers, 
+  TrendingUp, 
+  Radio, 
+  ShieldAlert, 
+  ChevronRight,
   Plus,
-  Minus
+  Minus,
+  ArrowUpRight,
+  Zap,
+  Server
 } from 'lucide-react';
-import { Camera, Department, District, AuditLog, Language } from '../types';
 
 interface OverviewViewProps {
-  cameras?: Camera[];
-  departments?: Department[];
-  districts?: District[];
-  auditLogs?: AuditLog[];
-  healthEvents?: any[];
-  currentLang?: Language;
-  onNavigateTab: (tab: any) => void;
-  onSelectCamera?: (camera: Camera) => void;
+  onNavigateTab?: (tab: string) => void;
   onOpenLiveStream?: (camera: Camera) => void;
 }
+
+interface MapHoverNode {
+  id: string;
+  name: string;
+  category: string;
+  district: string;
+  status: 'ONLINE' | 'DEGRADED' | 'OFFLINE';
+  totalCameras: number;
+  aiCameras: number;
+  vms: string;
+  resolution: string;
+  fps: number;
+  x: number;
+  y: number;
+}
+
+const MAP_NODES: MapHoverNode[] = [
+  { id: 'n-1', name: 'Surendranagar', category: 'State Command Hub', district: 'Surendranagar', status: 'ONLINE', totalCameras: 1240, aiCameras: 840, vms: 'Sentinel Cloud Edge', resolution: '4K UHD', fps: 25, x: 540, y: 180 },
+  { id: 'n-2', name: 'Wadhwan', category: 'East Municipal Sector', district: 'Surendranagar', status: 'ONLINE', totalCameras: 480, aiCameras: 210, vms: 'Honeywell MAXPRO', resolution: '1080p FHD', fps: 30, x: 630, y: 205 },
+  { id: 'n-3', name: 'Ratanpar', category: 'North Substation Junction', district: 'Surendranagar', status: 'ONLINE', totalCameras: 320, aiCameras: 140, vms: 'Milestone XProtect', resolution: '1080p FHD', fps: 25, x: 540, y: 130 },
+  { id: 'n-4', name: 'Godavari', category: 'Highway Checkpoint 17', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 210, aiCameras: 95, vms: 'Dahua SmartVMS', resolution: '1080p FHD', fps: 15, x: 210, y: 160 },
+  { id: 'n-5', name: 'Shekhpar', category: 'West Rural Division', district: 'Surendranagar', status: 'ONLINE', totalCameras: 180, aiCameras: 80, vms: 'Hikvision iVMS-4200', resolution: '1080p FHD', fps: 25, x: 300, y: 150 },
+  { id: 'n-6', name: 'Gautamgadh', category: 'State Border Post 01', district: 'Surendranagar', status: 'OFFLINE', totalCameras: 150, aiCameras: 60, vms: 'Bosch BVMS', resolution: '720p HD', fps: 0, x: 85, y: 235 },
+  { id: 'n-7', name: 'Kukda', category: 'River Bridge Toll Node', district: 'Surendranagar', status: 'ONLINE', totalCameras: 290, aiCameras: 180, vms: 'Axis Camera Station', resolution: '4K UHD', fps: 30, x: 195, y: 290 },
+  { id: 'n-8', name: 'Limali', category: 'Central Transit Hub', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 160, aiCameras: 70, vms: 'Sentinel Cloud Edge', resolution: '1080p FHD', fps: 18, x: 350, y: 290 },
+  { id: 'n-9', name: 'Malod', category: 'Mid-District Surveillance', district: 'Surendranagar', status: 'ONLINE', totalCameras: 310, aiCameras: 190, vms: 'Honeywell MAXPRO', resolution: '4K UHD', fps: 25, x: 485, y: 300 },
+  { id: 'n-10', name: 'Vaghela', category: 'South East Industrial Grid', district: 'Surendranagar', status: 'ONLINE', totalCameras: 240, aiCameras: 120, vms: 'Milestone XProtect', resolution: '1080p FHD', fps: 30, x: 615, y: 335 },
+  { id: 'n-11', name: 'Munjpar', category: 'South Junction Post', district: 'Surendranagar', status: 'OFFLINE', totalCameras: 190, aiCameras: 90, vms: 'Dahua SmartVMS', resolution: '1080p FHD', fps: 0, x: 270, y: 365 },
+  { id: 'n-12', name: 'Jasapar', category: 'District Patrol Checkpoint', district: 'Surendranagar', status: 'ONLINE', totalCameras: 140, aiCameras: 65, vms: 'Hikvision iVMS-4200', resolution: '1080p FHD', fps: 25, x: 205, y: 415 },
+  { id: 'n-13', name: 'Timba', category: 'State Highway Toll Node 51', district: 'Surendranagar', status: 'ONLINE', totalCameras: 380, aiCameras: 260, vms: 'Sentinel Cloud Edge', resolution: '4K UHD', fps: 30, x: 565, y: 440 },
+  { id: 'n-14', name: 'Gundiyala', category: 'South West Substation', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 110, aiCameras: 40, vms: 'Bosch BVMS', resolution: '720p HD', fps: 12, x: 490, y: 465 }
+];
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateTab,
 }) => {
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [activeHoverNode, setActiveHoverNode] = useState<{ node: MapHoverNode; clientX: number; clientY: number } | null>(null);
+
+  const handleNodeMouseMove = (node: MapHoverNode, e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setActiveHoverNode({
+      node,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top - 10,
+    });
+  };
 
   return (
     <div className="w-full space-y-5 animate-in fade-in duration-300">
@@ -106,69 +143,78 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 font-sans tracking-tight">
-              1,842
+              1,840
             </div>
             <div className="w-full bg-slate-200/80 h-1.5 rounded-full mt-2.5 overflow-hidden">
-              <div className="bg-[#F59E0B] h-full rounded-full" style={{ width: '12%' }}></div>
+              <div className="bg-[#F59E0B] h-full rounded-full" style={{ width: '7%' }}></div>
             </div>
           </div>
         </div>
 
         {/* OFFLINE */}
-        <div className="bg-[#FAF5F6] border border-[#F2E0E4] rounded-xl p-4 flex flex-col justify-between shadow-2xs">
+        <div className="bg-[#FEF2F2] border border-[#FEE2E2] rounded-xl p-4 flex flex-col justify-between shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-600 tracking-wider uppercase">
               OFFLINE
             </span>
             <div className="w-8 h-8 rounded-lg bg-[#FEE2E2] flex items-center justify-center text-[#DC2626]">
-              <XCircle className="w-4 h-4" />
+              <Radio className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 font-sans tracking-tight">
-              1,278
+              1,280
             </div>
             <div className="w-full bg-slate-200/80 h-1.5 rounded-full mt-2.5 overflow-hidden">
-              <div className="bg-[#EF4444] h-full rounded-full" style={{ width: '7%' }}></div>
+              <div className="bg-[#EF4444] h-full rounded-full" style={{ width: '5%' }}></div>
             </div>
           </div>
         </div>
 
-        {/* MAINTENANCE */}
-        <div className="bg-[#F1F5FA] border border-[#DFE7F2] rounded-xl p-4 flex flex-col justify-between shadow-2xs">
+        {/* SYSTEM HEALTH */}
+        <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-xl p-4 flex flex-col justify-between shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-600 tracking-wider uppercase">
-              MAINTENANCE
+              SYSTEM HEALTH
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#2563EB]">
-              <Wrench className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
+              <Activity className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 font-sans tracking-tight">
-              214
+            <div className="text-2xl font-bold text-[#15803D] font-sans tracking-tight">
+              96.4%
             </div>
-            <div className="w-full bg-slate-200/80 h-1.5 rounded-full mt-2.5 overflow-hidden">
-              <div className="bg-[#3B82F6] h-full rounded-full" style={{ width: '3%' }}></div>
+            <div className="text-[11px] font-semibold text-[#15803D] mt-1">
+              <span>Optimal Grid Telemetry</span>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* 3. Secondary Summary Pills Row */}
-      <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-        <div className="px-4 py-1.5 bg-white border border-slate-200/90 rounded-full text-xs text-slate-600 shadow-2xs">
-          Departments: <strong className="text-slate-900 font-bold ml-1">18</strong>
+      {/* 3. Filter Pills Bar */}
+      <div className="flex flex-wrap items-center gap-2.5 py-1">
+        <div className="px-4 py-1.5 bg-white border border-slate-200/90 rounded-full text-xs text-slate-600 shadow-2xs flex items-center">
+          <Building2 className="w-3.5 h-3.5 text-[#0052CC] mr-1.5" />
+          <span>Departments: </span>
+          <strong className="text-slate-900 font-bold ml-1">18</strong>
         </div>
-        <div className="px-4 py-1.5 bg-white border border-slate-200/90 rounded-full text-xs text-slate-600 shadow-2xs">
-          Districts: <strong className="text-slate-900 font-bold ml-1">33</strong>
-        </div>
-        <div className="px-4 py-1.5 bg-white border border-slate-200/90 rounded-full text-xs text-slate-600 shadow-2xs">
-          VMS Systems Linked: <strong className="text-slate-900 font-bold ml-1">42</strong>
-        </div>
+
         <div className="px-4 py-1.5 bg-white border border-slate-200/90 rounded-full text-xs text-slate-600 shadow-2xs flex items-center">
           <MapPin className="w-3.5 h-3.5 text-[#0052CC] mr-1.5" />
+          <span>Districts: </span>
+          <strong className="text-slate-900 font-bold ml-1">33</strong>
+        </div>
+
+        <div className="px-4 py-1.5 bg-white border border-slate-200/90 rounded-full text-xs text-slate-600 shadow-2xs flex items-center">
+          <Server className="w-3.5 h-3.5 text-[#0052CC] mr-1.5" />
+          <span>VMS Systems Linked: </span>
+          <strong className="text-slate-900 font-bold ml-1">42</strong>
+        </div>
+
+        <div className="px-4 py-1.5 bg-white border border-slate-200/90 rounded-full text-xs text-slate-600 shadow-2xs flex items-center">
+          <Zap className="w-3.5 h-3.5 text-[#0052CC] mr-1.5" />
           <span>Cameras with AI: </span>
           <strong className="text-slate-900 font-bold ml-1">8,940</strong>
         </div>
@@ -198,37 +244,22 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               <path d="M 400,20 Q 550,60 700,20 T 880,180 Q 820,320 650,260 Z" fill="#E2F2E4" opacity="0.85" />
               <path d="M 520,380 Q 680,350 820,440 L 890,540 L 480,540 Z" fill="#DCF0DE" opacity="0.75" />
 
-              {/* Water Bodies & Rivers (Bhogavo River & Dams) */}
-              <path 
-                d="M -10,320 Q 120,380 220,300 T 360,490 Q 420,510 500,480" 
-                fill="none" 
-                stroke="#A8D5F2" 
-                strokeWidth="14" 
-                strokeLinecap="round" 
-                opacity="0.85"
-              />
-              <path 
-                d="M 220,180 Q 320,140 460,200 T 680,120 Q 750,150 880,90" 
-                fill="none" 
-                stroke="#A8D5F2" 
-                strokeWidth="10" 
-                strokeLinecap="round" 
-                opacity="0.75"
-              />
+              {/* Water Bodies & Rivers */}
+              <path d="M -10,320 Q 120,380 220,300 T 360,490 Q 420,510 500,480" fill="none" stroke="#A8D5F2" strokeWidth="14" strokeLinecap="round" opacity="0.85" />
+              <path d="M 220,180 Q 320,140 460,200 T 680,120 Q 750,150 880,90" fill="none" stroke="#A8D5F2" strokeWidth="10" strokeLinecap="round" opacity="0.75" />
 
-              {/* Secondary Road Networks (White / Light Tan) */}
+              {/* Secondary Road Networks */}
               <path d="M 120,40 L 280,190 L 480,240 L 780,290" fill="none" stroke="#FFFFFF" strokeWidth="6" />
               <path d="M 80,480 L 240,360 L 520,380 L 820,490" fill="none" stroke="#FFFFFF" strokeWidth="6" />
               <path d="M 420,80 L 460,280 L 560,520" fill="none" stroke="#FFFFFF" strokeWidth="5" />
               <path d="M 280,190 L 160,340 L 320,510" fill="none" stroke="#FFFFFF" strokeWidth="5" />
               <path d="M 640,120 L 720,350 L 610,510" fill="none" stroke="#FFFFFF" strokeWidth="5" />
 
-              {/* Primary State Highways (Golden / Orange Yellow with Highway Badges) */}
+              {/* Primary State Highways */}
               <path d="M -20,240 Q 200,280 480,220 T 920,300" fill="none" stroke="#F5C067" strokeWidth="4" />
               <path d="M 480,0 Q 510,180 520,320 T 560,560" fill="none" stroke="#F5C067" strokeWidth="4" />
 
-              {/* Highway Badge Markers */}
-              {/* Highway 17 */}
+              {/* Highway Badges */}
               <g transform="translate(200, 270)">
                 <rect x="-12" y="-9" width="24" height="18" rx="4" fill="#FFFFFF" stroke="#64748B" strokeWidth="1.5" />
                 <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#334155">17</text>
@@ -241,167 +272,93 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 <rect x="-12" y="-9" width="24" height="18" rx="4" fill="#FFFFFF" stroke="#64748B" strokeWidth="1.5" />
                 <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#334155">17</text>
               </g>
-
-              {/* Highway 51 */}
               <g transform="translate(608, 142)">
                 <rect x="-12" y="-9" width="24" height="18" rx="4" fill="#EAB308" stroke="#FFFFFF" strokeWidth="1.5" />
                 <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#FFFFFF">51</text>
               </g>
 
-              {/* Town & Village Labels (Bilingual English + Gujarati matching map) */}
-              
-              {/* Surendranagar (Major City Hub) */}
-              <g transform="translate(540, 180)">
-                <circle cx="0" cy="0" r="5" fill="#1E293B" />
-                <text x="0" y="-14" textAnchor="middle" fontSize="17" fontWeight="bold" fill="#0F172A">Surendranagar</text>
-                <text x="0" y="3" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#334155">સુરેન્દ્રનગર</text>
-              </g>
+              {/* Interactive Node Markers with Hover Callouts */}
+              {MAP_NODES.map((node) => {
+                const isOnline = node.status === 'ONLINE';
+                const isDegraded = node.status === 'DEGRADED';
+                const statusColor = isOnline ? '#22C55E' : isDegraded ? '#F59E0B' : '#EF4444';
 
-              {/* Wadhwan */}
-              <g transform="translate(630, 205)">
-                <circle cx="0" cy="0" r="3.5" fill="#334155" />
-                <text x="0" y="-8" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#1E293B">WADHWAN</text>
-                <text x="0" y="5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#475569">વઢવાણ</text>
-              </g>
+                return (
+                  <g 
+                    key={node.id} 
+                    transform={`translate(${node.x}, ${node.y})`}
+                    className="cursor-pointer transition-transform duration-150 hover:scale-125"
+                    onMouseEnter={(e) => handleNodeMouseMove(node, e)}
+                    onMouseLeave={() => setActiveHoverNode(null)}
+                  >
+                    {/* Node Dot */}
+                    <circle cx="0" cy="0" r="4.5" fill="#1E293B" />
+                    
+                    {/* Status Pulsating Ring */}
+                    <circle cx="0" cy="-12" r="5" fill={statusColor} />
+                    <circle cx="0" cy="-12" r="10" fill={statusColor} opacity="0.25" className="animate-ping" />
 
-              {/* Ratanpar */}
-              <g transform="translate(540, 130)">
-                <circle cx="0" cy="0" r="3.5" fill="#334155" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#1E293B">RATANPAR</text>
-                <text x="0" y="6" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#475569">રતનપર</text>
-              </g>
-
-              {/* Danawada */}
-              <g transform="translate(180, 65)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Danawada</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">દાણવાડા</text>
-              </g>
-
-              {/* Shekhpar */}
-              <g transform="translate(300, 150)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Shekhpar</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">શેખપર</text>
-              </g>
-
-              {/* Godavari */}
-              <g transform="translate(210, 160)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Godavari</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">ગોદાવરી</text>
-              </g>
-
-              {/* Gautamgadh */}
-              <g transform="translate(85, 235)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Gautamgadh</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">ગૌતમગઢ</text>
-              </g>
-
-              {/* Kukda */}
-              <g transform="translate(195, 290)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Kukda</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">કુકડા</text>
-              </g>
-
-              {/* Limali */}
-              <g transform="translate(350, 290)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Limali</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">લીમલી</text>
-              </g>
-
-              {/* Malod */}
-              <g transform="translate(485, 300)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Malod</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">માલોદ</text>
-              </g>
-
-              {/* Vaghela */}
-              <g transform="translate(615, 335)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Vaghela</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">વાઘેલા</text>
-              </g>
-
-              {/* Munjpar */}
-              <g transform="translate(270, 365)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Munjpar</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">મુંજપર</text>
-              </g>
-
-              {/* Jasapar */}
-              <g transform="translate(205, 415)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Jasapar</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">જસાપર</text>
-              </g>
-
-              {/* Naliya */}
-              <g transform="translate(190, 480)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Naliya</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">નળિયા</text>
-              </g>
-
-              {/* Chanpar */}
-              <g transform="translate(325, 470)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Chanpar</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">ચણપાર</text>
-              </g>
-
-              {/* Gundiyala */}
-              <g transform="translate(490, 465)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Gundiyala</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">ગુંદિયાળા</text>
-              </g>
-
-              {/* Timba */}
-              <g transform="translate(565, 440)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Timba</text>
-                <text x="0" y="8" textAnchor="middle" fontSize="11" fontWeight="medium" fill="#475569">ટીંબા</text>
-              </g>
-
-              {/* Rampada */}
-              <g transform="translate(330, 525)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Rampara</text>
-              </g>
-
-              {/* Sidhsar */}
-              <g transform="translate(80, 535)">
-                <circle cx="0" cy="0" r="3" fill="#475569" />
-                <text x="0" y="-6" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E293B">Sidhsar</text>
-              </g>
-
-              {/* Live CCTV Status Nodes (Green, Red, Orange pulsating dots) */}
-              {/* Online Nodes */}
-              <g transform="translate(535, 185)"><circle cx="0" cy="0" r="4.5" fill="#22C55E" /><circle cx="0" cy="0" r="9" fill="#22C55E" opacity="0.3" /></g>
-              <g transform="translate(625, 210)"><circle cx="0" cy="0" r="4" fill="#22C55E" /></g>
-              <g transform="translate(310, 155)"><circle cx="0" cy="0" r="4" fill="#22C55E" /></g>
-              <g transform="translate(200, 295)"><circle cx="0" cy="0" r="4" fill="#22C55E" /></g>
-              <g transform="translate(480, 305)"><circle cx="0" cy="0" r="4" fill="#22C55E" /></g>
-              <g transform="translate(560, 445)"><circle cx="0" cy="0" r="4" fill="#22C55E" /></g>
-
-              {/* Degraded Nodes */}
-              <g transform="translate(215, 165)"><circle cx="0" cy="0" r="4" fill="#F59E0B" /></g>
-              <g transform="translate(355, 295)"><circle cx="0" cy="0" r="4" fill="#F59E0B" /></g>
-              <g transform="translate(495, 470)"><circle cx="0" cy="0" r="4" fill="#F59E0B" /></g>
-
-              {/* Offline Nodes */}
-              <g transform="translate(90, 240)"><circle cx="0" cy="0" r="4" fill="#EF4444" /></g>
-              <g transform="translate(275, 370)"><circle cx="0" cy="0" r="4" fill="#EF4444" /></g>
-              <g transform="translate(195, 485)"><circle cx="0" cy="0" r="4" fill="#EF4444" /></g>
+                    {/* Town Text Labels in Clean English */}
+                    <text x="0" y="-22" textAnchor="middle" fontSize="11" fontWeight="800" fill="#0F172A">
+                      {node.name}
+                    </text>
+                    <text x="0" y="14" textAnchor="middle" fontSize="9" fontWeight="600" fill="#64748B">
+                      {node.category}
+                    </text>
+                  </g>
+                );
+              })}
 
             </svg>
           </div>
+
+          {/* Floating Hover Tooltip Popup Card */}
+          {activeHoverNode && (
+            <div 
+              className="absolute z-[2000] bg-white/95 backdrop-blur-md rounded-xl p-3.5 border border-slate-300 shadow-xl pointer-events-none transition-all duration-150 animate-in fade-in zoom-in-95"
+              style={{
+                left: `${activeHoverNode.node.x / 900 * 100}%`,
+                top: `${activeHoverNode.node.y / 550 * 100 - 15}%`,
+                transform: 'translate(-50%, -100%)',
+                minWidth: '220px'
+              }}
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
+                <div>
+                  <div className="font-bold text-xs text-slate-900">{activeHoverNode.node.name}</div>
+                  <div className="text-[10px] text-slate-500 font-medium">{activeHoverNode.node.category}</div>
+                </div>
+                <span 
+                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                    activeHoverNode.node.status === 'ONLINE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                    activeHoverNode.node.status === 'DEGRADED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                    'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}
+                >
+                  ● {activeHoverNode.node.status}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 text-[11px] font-sans text-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">CCTV Cameras:</span>
+                  <strong className="text-slate-900 font-bold">{activeHoverNode.node.totalCameras} Units</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">AI Enabled:</span>
+                  <strong className="text-[#0052CC] font-bold">{activeHoverNode.node.aiCameras} Cameras</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">VMS Platform:</span>
+                  <span className="font-semibold text-slate-800">{activeHoverNode.node.vms}</span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px]">
+                  <span className="text-slate-500">Telemetry:</span>
+                  <span className="font-mono font-bold text-slate-700">{activeHoverNode.node.fps} FPS • {activeHoverNode.node.resolution}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Floating Legend Box (Top Left) */}
           <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-200/90 shadow-md">
@@ -447,269 +404,50 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
         {/* Right: Distribution Overview Card (Col-4) */}
         <div className="lg:col-span-4 bg-[#EDF3F9] border border-slate-200/80 rounded-2xl p-5 flex flex-col justify-between shadow-2xs">
-          
-          {/* Header */}
           <div>
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-900">
-                Distribution Overview
-              </h2>
-              <button className="text-slate-400 hover:text-slate-700 transition">
-                <MoreVertical className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Donut Chart & Legend */}
-            <div className="mt-5 flex items-center justify-between gap-3">
-              
-              {/* SVG Donut Chart */}
-              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  {/* Track Circle */}
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#E2E8F0" strokeWidth="12" />
-                  
-                  {/* Police 60% (Dark Navy #06152B) */}
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="38" 
-                    fill="none" 
-                    stroke="#06152B" 
-                    strokeWidth="12" 
-                    strokeDasharray="143 239" 
-                    strokeDashoffset="0"
-                  />
-
-                  {/* Transport 25% (Blue #0052CC) */}
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="38" 
-                    fill="none" 
-                    stroke="#0052CC" 
-                    strokeWidth="12" 
-                    strokeDasharray="60 239" 
-                    strokeDashoffset="-143"
-                  />
-
-                  {/* Other 15% (Grey #CBD5E1) */}
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="38" 
-                    fill="none" 
-                    stroke="#CBD5E1" 
-                    strokeWidth="12" 
-                    strokeDasharray="36 239" 
-                    strokeDashoffset="-203"
-                  />
-                </svg>
-
-                {/* Donut Center Label */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-sm font-bold text-slate-900 leading-none">18</span>
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight mt-0.5">DEPTS</span>
-                </div>
+            <div className="flex items-center justify-between border-b border-slate-200/70 pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  DISTRICT DISTRIBUTION
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">Top 5 Gujarat Districts</p>
               </div>
+              <span className="text-[10px] font-bold text-[#0052CC] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                33 Total
+              </span>
+            </div>
 
-              {/* Donut Legend */}
-              <div className="space-y-2 text-xs font-medium text-slate-700">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#06152B]"></span>
-                  <span>Police: <strong className="font-bold text-slate-900">60%</strong></span>
+            <div className="mt-4 space-y-3.5">
+              {[
+                { name: 'Ahmedabad Urban & Rural', count: '4,820', pct: 85, color: '#0052CC' },
+                { name: 'Surat City & Industrial', count: '3,940', pct: 72, color: '#0052CC' },
+                { name: 'Vadodara District', count: '2,650', pct: 58, color: '#0052CC' },
+                { name: 'Rajkot Zone', count: '2,110', pct: 46, color: '#0052CC' },
+                { name: 'Gandhinagar Capital', count: '1,890', pct: 40, color: '#0052CC' },
+              ].map((item) => (
+                <div key={item.name} className="space-y-1">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-slate-800">{item.name}</span>
+                    <span className="text-slate-900 font-bold">{item.count}</span>
+                  </div>
+                  <div className="w-full bg-slate-200/90 h-2 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${item.pct}%`, backgroundColor: item.color }}></div>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#0052CC]"></span>
-                  <span>Transport: <strong className="font-bold text-slate-900">25%</strong></span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#CBD5E1]"></span>
-                  <span>Other: <strong className="font-bold text-slate-900">15%</strong></span>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* Divider */}
-          <div className="w-full h-[1px] bg-slate-300/70 my-5"></div>
-
-          {/* Health Trends Bar Chart */}
-          <div>
-            <div className="text-[10px] font-bold text-slate-600 tracking-wider uppercase mb-3">
-              HEALTH TRENDS (LAST 7 DAYS)
-            </div>
-
-            {/* 7 Vertical Bar Columns with Navy/Slate Gradient */}
-            <div className="h-20 flex items-end justify-between gap-1.5 px-1">
-              <div className="w-full bg-[#94A3B8] rounded-t-xs" style={{ height: '35%' }}></div>
-              <div className="w-full bg-[#64748B] rounded-t-xs" style={{ height: '55%' }}></div>
-              <div className="w-full bg-[#475569] rounded-t-xs" style={{ height: '50%' }}></div>
-              <div className="w-full bg-[#1E293B] rounded-t-xs" style={{ height: '78%' }}></div>
-              <div className="w-full bg-[#06152B] rounded-t-xs" style={{ height: '95%' }}></div>
-              <div className="w-full bg-[#475569] rounded-t-xs" style={{ height: '70%' }}></div>
-              <div className="w-full bg-[#94A3B8] rounded-t-xs" style={{ height: '52%' }}></div>
+              ))}
             </div>
           </div>
 
-        </div>
-
-      </div>
-
-      {/* 5. Recent System Activity Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-        
-        {/* Table Header Row */}
-        <div className="px-5 py-3.5 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-900">
-            Recent System Activity
-          </h2>
-          <button 
-            onClick={() => onNavigateTab('audit')}
-            className="text-xs font-semibold text-slate-700 hover:text-[#0052CC] flex items-center space-x-1 transition"
-          >
-            <span>View All Logs</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
-          </button>
-        </div>
-
-        {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-[#EDF3FA] text-slate-800 font-semibold border-y border-slate-200/90">
-              <tr>
-                <th className="py-2.5 px-5">Timestamp</th>
-                <th className="py-2.5 px-5">User</th>
-                <th className="py-2.5 px-5">Action</th>
-                <th className="py-2.5 px-5">Camera ID / Scope</th>
-                <th className="py-2.5 px-5 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-sans">
-              
-              {/* Row 1 */}
-              <tr className="hover:bg-slate-50/70 transition">
-                <td className="py-3 px-5 text-slate-600 font-mono text-[11px]">2024-05-20 14:32:10</td>
-                <td className="py-3 px-5 font-medium text-slate-900 font-mono text-[11px]">j.doe_admin</td>
-                <td className="py-3 px-5 text-slate-800">Camera Registered</td>
-                <td className="py-3 px-5 font-mono text-slate-700 text-[11px]">CCTV-AHD-0912</td>
-                <td className="py-3 px-5 text-right">
-                  <span className="inline-block px-2.5 py-0.5 rounded bg-[#DCFCE7] text-[#15803D] text-[10px] font-bold tracking-wider uppercase">
-                    SUCCESS
-                  </span>
-                </td>
-              </tr>
-
-              {/* Row 2 */}
-              <tr className="hover:bg-slate-50/70 transition">
-                <td className="py-3 px-5 text-slate-600 font-mono text-[11px]">2024-05-20 13:15:05</td>
-                <td className="py-3 px-5 font-medium text-slate-900 font-mono text-[11px]">sys_automation</td>
-                <td className="py-3 px-5 text-slate-800">Health Check Cycle</td>
-                <td className="py-3 px-5 font-mono text-slate-700 text-[11px]">Zone 3 (Surat)</td>
-                <td className="py-3 px-5 text-right">
-                  <span className="inline-block px-2.5 py-0.5 rounded bg-[#DCFCE7] text-[#15803D] text-[10px] font-bold tracking-wider uppercase">
-                    COMPLETED
-                  </span>
-                </td>
-              </tr>
-
-              {/* Row 3 */}
-              <tr className="hover:bg-slate-50/70 transition">
-                <td className="py-3 px-5 text-slate-600 font-mono text-[11px]">2024-05-20 11:45:22</td>
-                <td className="py-3 px-5 font-medium text-slate-900 font-mono text-[11px]">r.sharma_ips</td>
-                <td className="py-3 px-5 text-slate-800">Bulk Import</td>
-                <td className="py-3 px-5 font-mono text-slate-700 text-[11px]">batch_vadodara_q2</td>
-                <td className="py-3 px-5 text-right">
-                  <span className="inline-block px-2.5 py-0.5 rounded bg-[#DBEAFE] text-[#1D4ED8] text-[10px] font-bold tracking-wider uppercase">
-                    PROCESSING
-                  </span>
-                </td>
-              </tr>
-
-              {/* Row 4 */}
-              <tr className="hover:bg-slate-50/70 transition">
-                <td className="py-3 px-5 text-slate-600 font-mono text-[11px]">2024-05-20 09:10:01</td>
-                <td className="py-3 px-5 font-medium text-slate-900 font-mono text-[11px]">api_gateway</td>
-                <td className="py-3 px-5 text-slate-800">Stream Disconnect</td>
-                <td className="py-3 px-5 font-mono text-slate-700 text-[11px]">CCTV-RJK-4410</td>
-                <td className="py-3 px-5 text-right">
-                  <span className="inline-block px-2.5 py-0.5 rounded bg-[#FEE2E2] text-[#B91C1C] text-[10px] font-bold tracking-wider uppercase">
-                    FAILED
-                  </span>
-                </td>
-              </tr>
-
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-
-      {/* 6. System Architecture Flow (Model 1) Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs">
-        
-        <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-8">
-          SYSTEM ARCHITECTURE FLOW (MODEL 1)
-        </div>
-
-        {/* 4 Connected Nodes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
-          
-          {/* Node 1: Dept Assets */}
-          <div className="relative flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-xl bg-[#F1F5F9] border border-slate-200 flex items-center justify-center text-slate-800 shadow-2xs mb-3">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <div className="text-xs font-bold text-slate-900">Dept Assets</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Edge Devices</div>
-            
-            {/* Arrow connecting to Node 2 */}
-            <div className="hidden lg:flex items-center absolute top-7 -right-5 transform -translate-y-1/2 text-slate-300">
-              <div className="w-12 border-t-2 border-dashed border-slate-300"></div>
-              <span className="text-slate-400 font-bold ml-1 text-xs">{'>'}</span>
-            </div>
+          <div className="pt-4 border-t border-slate-200/70 mt-4 flex items-center justify-between">
+            <span className="text-xs text-slate-500 font-medium">Model 3 Federation Active</span>
+            <button 
+              onClick={() => onNavigateTab && onNavigateTab('districts')}
+              className="text-xs font-bold text-[#0052CC] hover:underline flex items-center"
+            >
+              <span>View All 33 Districts</span>
+              <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
+            </button>
           </div>
-
-          {/* Node 2: Onboarding */}
-          <div className="relative flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-xl bg-[#06152B] flex items-center justify-center text-white shadow-xs mb-3">
-              <SlidersHorizontal className="w-6 h-6" />
-            </div>
-            <div className="text-xs font-bold text-slate-900">Onboarding</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Validation Engine</div>
-
-            {/* Arrow connecting to Node 3 */}
-            <div className="hidden lg:flex items-center absolute top-7 -right-5 transform -translate-y-1/2 text-slate-300">
-              <div className="w-12 border-t-2 border-dashed border-slate-300"></div>
-              <span className="text-slate-400 font-bold ml-1 text-xs">{'>'}</span>
-            </div>
-          </div>
-
-          {/* Node 3: Central Registry (Highlighted Hero Node) */}
-          <div className="relative flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[#0062D2] flex items-center justify-center text-white shadow-md mb-2">
-              <Database className="w-7 h-7" />
-            </div>
-            <div className="text-sm font-bold text-[#0062D2]">Central Registry</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">PostgreSQL/GIS</div>
-
-            {/* Arrow connecting to Node 4 */}
-            <div className="hidden lg:flex items-center absolute top-7 -right-5 transform -translate-y-1/2 text-slate-300">
-              <div className="w-12 border-t-2 border-dashed border-slate-300"></div>
-              <span className="text-slate-400 font-bold ml-1 text-xs">{'>'}</span>
-            </div>
-          </div>
-
-          {/* Node 4: GIS & APIs */}
-          <div className="relative flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-xl bg-[#F1F5F9] border border-slate-200 flex items-center justify-center text-slate-800 shadow-2xs mb-3">
-              <LayoutGrid className="w-6 h-6" />
-            </div>
-            <div className="text-xs font-bold text-slate-900">GIS & APIs</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Consumption Layer</div>
-          </div>
-
         </div>
 
       </div>

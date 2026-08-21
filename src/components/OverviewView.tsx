@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Camera } from '../types';
 import { 
   Video, 
@@ -6,15 +8,9 @@ import {
   AlertTriangle, 
   Building2, 
   MapPin, 
-  Eye, 
   Activity, 
-  Layers, 
   TrendingUp, 
   Radio, 
-  ShieldAlert, 
-  ChevronRight,
-  Plus,
-  Minus,
   ArrowUpRight,
   Zap,
   Server
@@ -25,7 +21,7 @@ interface OverviewViewProps {
   onOpenLiveStream?: (camera: Camera) => void;
 }
 
-interface MapHoverNode {
+interface OverviewMapNode {
   id: string;
   name: string;
   category: string;
@@ -36,41 +32,149 @@ interface MapHoverNode {
   vms: string;
   resolution: string;
   fps: number;
-  x: number;
-  y: number;
+  lat: number;
+  lng: number;
 }
 
-const MAP_NODES: MapHoverNode[] = [
-  { id: 'n-1', name: 'Surendranagar', category: 'State Command Hub', district: 'Surendranagar', status: 'ONLINE', totalCameras: 1240, aiCameras: 840, vms: 'Sentinel Cloud Edge', resolution: '4K UHD', fps: 25, x: 540, y: 180 },
-  { id: 'n-2', name: 'Wadhwan', category: 'East Municipal Sector', district: 'Surendranagar', status: 'ONLINE', totalCameras: 480, aiCameras: 210, vms: 'Honeywell MAXPRO', resolution: '1080p FHD', fps: 30, x: 630, y: 205 },
-  { id: 'n-3', name: 'Ratanpar', category: 'North Substation Junction', district: 'Surendranagar', status: 'ONLINE', totalCameras: 320, aiCameras: 140, vms: 'Milestone XProtect', resolution: '1080p FHD', fps: 25, x: 540, y: 130 },
-  { id: 'n-4', name: 'Godavari', category: 'Highway Checkpoint 17', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 210, aiCameras: 95, vms: 'Dahua SmartVMS', resolution: '1080p FHD', fps: 15, x: 210, y: 160 },
-  { id: 'n-5', name: 'Shekhpar', category: 'West Rural Division', district: 'Surendranagar', status: 'ONLINE', totalCameras: 180, aiCameras: 80, vms: 'Hikvision iVMS-4200', resolution: '1080p FHD', fps: 25, x: 300, y: 150 },
-  { id: 'n-6', name: 'Gautamgadh', category: 'State Border Post 01', district: 'Surendranagar', status: 'OFFLINE', totalCameras: 150, aiCameras: 60, vms: 'Bosch BVMS', resolution: '720p HD', fps: 0, x: 85, y: 235 },
-  { id: 'n-7', name: 'Kukda', category: 'River Bridge Toll Node', district: 'Surendranagar', status: 'ONLINE', totalCameras: 290, aiCameras: 180, vms: 'Axis Camera Station', resolution: '4K UHD', fps: 30, x: 195, y: 290 },
-  { id: 'n-8', name: 'Limali', category: 'Central Transit Hub', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 160, aiCameras: 70, vms: 'Sentinel Cloud Edge', resolution: '1080p FHD', fps: 18, x: 350, y: 290 },
-  { id: 'n-9', name: 'Malod', category: 'Mid-District Surveillance', district: 'Surendranagar', status: 'ONLINE', totalCameras: 310, aiCameras: 190, vms: 'Honeywell MAXPRO', resolution: '4K UHD', fps: 25, x: 485, y: 300 },
-  { id: 'n-10', name: 'Vaghela', category: 'South East Industrial Grid', district: 'Surendranagar', status: 'ONLINE', totalCameras: 240, aiCameras: 120, vms: 'Milestone XProtect', resolution: '1080p FHD', fps: 30, x: 615, y: 335 },
-  { id: 'n-11', name: 'Munjpar', category: 'South Junction Post', district: 'Surendranagar', status: 'OFFLINE', totalCameras: 190, aiCameras: 90, vms: 'Dahua SmartVMS', resolution: '1080p FHD', fps: 0, x: 270, y: 365 },
-  { id: 'n-12', name: 'Jasapar', category: 'District Patrol Checkpoint', district: 'Surendranagar', status: 'ONLINE', totalCameras: 140, aiCameras: 65, vms: 'Hikvision iVMS-4200', resolution: '1080p FHD', fps: 25, x: 205, y: 415 },
-  { id: 'n-13', name: 'Timba', category: 'State Highway Toll Node 51', district: 'Surendranagar', status: 'ONLINE', totalCameras: 380, aiCameras: 260, vms: 'Sentinel Cloud Edge', resolution: '4K UHD', fps: 30, x: 565, y: 440 },
-  { id: 'n-14', name: 'Gundiyala', category: 'South West Substation', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 110, aiCameras: 40, vms: 'Bosch BVMS', resolution: '720p HD', fps: 12, x: 490, y: 465 }
+const OVERVIEW_MAP_NODES: OverviewMapNode[] = [
+  { id: 'n-1', name: 'Surendranagar Hub', category: 'State Command Hub', district: 'Surendranagar', status: 'ONLINE', totalCameras: 1240, aiCameras: 840, vms: 'Sentinel Cloud Edge', resolution: '4K UHD', fps: 25, lat: 22.722, lng: 71.637 },
+  { id: 'n-2', name: 'Wadhwan Sector', category: 'East Municipal Sector', district: 'Surendranagar', status: 'ONLINE', totalCameras: 480, aiCameras: 210, vms: 'Honeywell MAXPRO', resolution: '1080p FHD', fps: 30, lat: 22.701, lng: 71.678 },
+  { id: 'n-3', name: 'Ratanpar Substation', category: 'North Substation Junction', district: 'Surendranagar', status: 'ONLINE', totalCameras: 320, aiCameras: 140, vms: 'Milestone XProtect', resolution: '1080p FHD', fps: 25, lat: 22.748, lng: 71.642 },
+  { id: 'n-4', name: 'Godavari Checkpoint', category: 'Highway Checkpoint 17', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 210, aiCameras: 95, vms: 'Dahua SmartVMS', resolution: '1080p FHD', fps: 15, lat: 22.730, lng: 71.550 },
+  { id: 'n-5', name: 'Shekhpar Division', category: 'West Rural Division', district: 'Surendranagar', status: 'ONLINE', totalCameras: 180, aiCameras: 80, vms: 'Hikvision iVMS-4200', resolution: '1080p FHD', fps: 25, lat: 22.740, lng: 71.580 },
+  { id: 'n-6', name: 'Gautamgadh Border', category: 'State Border Post 01', district: 'Surendranagar', status: 'OFFLINE', totalCameras: 150, aiCameras: 60, vms: 'Bosch BVMS', resolution: '720p HD', fps: 0, lat: 22.700, lng: 71.490 },
+  { id: 'n-7', name: 'Kukda Toll Node', category: 'River Bridge Toll Node', district: 'Surendranagar', status: 'ONLINE', totalCameras: 290, aiCameras: 180, vms: 'Axis Camera Station', resolution: '4K UHD', fps: 30, lat: 22.670, lng: 71.540 },
+  { id: 'n-8', name: 'Limali Transit Hub', category: 'Central Transit Hub', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 160, aiCameras: 70, vms: 'Sentinel Cloud Edge', resolution: '1080p FHD', fps: 18, lat: 22.670, lng: 71.600 },
+  { id: 'n-9', name: 'Malod Grid', category: 'Mid-District Surveillance', district: 'Surendranagar', status: 'ONLINE', totalCameras: 310, aiCameras: 190, vms: 'Honeywell MAXPRO', resolution: '4K UHD', fps: 25, lat: 22.660, lng: 71.635 },
+  { id: 'n-10', name: 'Vaghela Corridor', category: 'South East Industrial Grid', district: 'Surendranagar', status: 'ONLINE', totalCameras: 240, aiCameras: 120, vms: 'Milestone XProtect', resolution: '1080p FHD', fps: 30, lat: 22.640, lng: 71.670 },
+  { id: 'n-11', name: 'Munjpar Junction', category: 'South Junction Post', district: 'Surendranagar', status: 'OFFLINE', totalCameras: 190, aiCameras: 90, vms: 'Dahua SmartVMS', resolution: '1080p FHD', fps: 0, lat: 22.630, lng: 71.560 },
+  { id: 'n-12', name: 'Jasapar Post', category: 'District Patrol Checkpoint', district: 'Surendranagar', status: 'ONLINE', totalCameras: 140, aiCameras: 65, vms: 'Hikvision iVMS-4200', resolution: '1080p FHD', fps: 25, lat: 22.605, lng: 71.535 },
+  { id: 'n-13', name: 'Timba Toll Node', category: 'State Highway Toll Node 51', district: 'Surendranagar', status: 'ONLINE', totalCameras: 380, aiCameras: 260, vms: 'Sentinel Cloud Edge', resolution: '4K UHD', fps: 30, lat: 22.595, lng: 71.650 },
+  { id: 'n-14', name: 'Gundiyala Station', category: 'South West Substation', district: 'Surendranagar', status: 'DEGRADED', totalCameras: 110, aiCameras: 40, vms: 'Bosch BVMS', resolution: '720p HD', fps: 12, lat: 22.585, lng: 71.625 }
 ];
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateTab,
 }) => {
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [activeHoverNode, setActiveHoverNode] = useState<{ node: MapHoverNode; clientX: number; clientY: number } | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
 
-  const handleNodeMouseMove = (node: MapHoverNode, e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setActiveHoverNode({
-      node,
-      clientX: rect.left + rect.width / 2,
-      clientY: rect.top - 10,
+  // Initialize Leaflet Map
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    if (mapInstanceRef.current) return;
+
+    // Initialize Leaflet map centered on Surendranagar district region
+    const map = L.map(mapContainerRef.current, {
+      center: [22.670, 71.600],
+      zoom: 11,
+      zoomControl: false,
     });
-  };
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CartoDB &copy; OpenStreetMap | Gujarat Police GIS',
+      maxZoom: 19,
+    }).addTo(map);
+
+    const markersGroup = L.layerGroup().addTo(map);
+
+    // Add nodes to Leaflet map with native hover popups (Zero buffering / zero flickering)
+    OVERVIEW_MAP_NODES.forEach(node => {
+      let colorHex = '#22C55E'; // Online
+      if (node.status === 'DEGRADED') colorHex = '#F59E0B';
+      if (node.status === 'OFFLINE') colorHex = '#EF4444';
+
+      const iconHtml = `
+        <div style="
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+        ">
+          <div style="
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: ${colorHex}30;
+            animation: pulse 2s infinite;
+          "></div>
+          <div style="
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: ${colorHex};
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+          "></div>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        html: iconHtml,
+        className: 'custom-overview-node-marker',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([node.lat, node.lng], { icon: customIcon });
+
+      const statusBg = node.status === 'ONLINE' ? '#DCFCE7' : node.status === 'DEGRADED' ? '#FEF3C7' : '#FEE2E2';
+      const statusColor = node.status === 'ONLINE' ? '#166534' : node.status === 'DEGRADED' ? '#92400E' : '#991B1B';
+
+      const popupContent = `
+        <div style="font-family:'Plus Jakarta Sans',Inter,sans-serif;font-size:12px;padding:4px 2px;min-width:220px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div>
+              <div style="font-weight:800;color:#0F172A;font-size:13px;">${node.name}</div>
+              <div style="color:#64748B;font-size:10px;font-weight:500;">${node.category}</div>
+            </div>
+            <span style="background:${statusBg};color:${statusColor};font-weight:800;font-size:9.5px;padding:2px 7px;border-radius:9999px;border:1px solid ${statusColor}40;">
+              ● ${node.status}
+            </span>
+          </div>
+          <hr style="border:none;border-top:1px solid #E2E8F0;margin:6px 0;"/>
+          <div style="display:flex;flex-direction:column;gap:3px;font-size:11px;color:#334155;">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#64748B;">CCTV Cameras:</span>
+              <strong style="color:#0F172A;">${node.totalCameras} Units</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#64748B;">AI Analytics:</span>
+              <strong style="color:#0052CC;">${node.aiCameras} Enabled</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#64748B;">VMS Platform:</span>
+              <span style="font-weight:600;color:#1E293B;">${node.vms}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:2px;padding-top:4px;border-top:1px stroke #F1F5F9;font-size:10px;color:#64748B;">
+              <span>Telemetry:</span>
+              <span style="font-family:monospace;font-weight:700;">${node.fps} FPS &bull; ${node.resolution}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const popup = L.popup({ closeButton: false, offset: [0, -10], className: 'ztrac-hover-popup' }).setContent(popupContent);
+      marker.bindPopup(popup);
+
+      // Open popup on hover, close on mouse-out (Native Leaflet - Zero Lag / Zero Buffering)
+      marker.on('mouseover', function() { marker.openPopup(); });
+      marker.on('mouseout',  function() { marker.closePopup(); });
+
+      markersGroup.addLayer(marker);
+    });
+
+    mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
 
   return (
     <div className="w-full space-y-5 animate-in fade-in duration-300">
@@ -220,148 +324,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
       </div>
 
-      {/* 4. Middle Section: Two Columns (Map & Distribution Overview) */}
+      {/* 4. Middle Section: Two Columns (Leaflet Map & Distribution Overview) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
-        {/* Left: Statewide Coverage Map (Col-8) */}
-        <div className="lg:col-span-8 relative h-[380px] sm:h-[420px] rounded-2xl overflow-hidden border border-slate-200/90 bg-[#F4F1EA] shadow-2xs group">
+        {/* Left: Interactive Leaflet Statewide Coverage Map (Col-8) */}
+        <div className="lg:col-span-8 relative h-[380px] sm:h-[420px] rounded-2xl overflow-hidden border border-slate-200/90 shadow-2xs group">
           
-          {/* Detailed SVG Map of Surendranagar / Gujarat Region */}
-          <div 
-            className="w-full h-full relative cursor-grab active:cursor-grabbing select-none transition-transform duration-300"
-            style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
-          >
-            <svg 
-              className="w-full h-full"
-              viewBox="0 0 900 550" 
-              preserveAspectRatio="xMidYMid slice"
-            >
-              {/* Soft Geographic Landmass Tones */}
-              <rect width="900" height="550" fill="#F3F0E6" />
-
-              {/* Green Agricultural & Forest Patches */}
-              <path d="M 50,300 Q 150,220 280,320 T 450,480 Q 200,560 50,500 Z" fill="#DCF0DE" opacity="0.85" />
-              <path d="M 400,20 Q 550,60 700,20 T 880,180 Q 820,320 650,260 Z" fill="#E2F2E4" opacity="0.85" />
-              <path d="M 520,380 Q 680,350 820,440 L 890,540 L 480,540 Z" fill="#DCF0DE" opacity="0.75" />
-
-              {/* Water Bodies & Rivers */}
-              <path d="M -10,320 Q 120,380 220,300 T 360,490 Q 420,510 500,480" fill="none" stroke="#A8D5F2" strokeWidth="14" strokeLinecap="round" opacity="0.85" />
-              <path d="M 220,180 Q 320,140 460,200 T 680,120 Q 750,150 880,90" fill="none" stroke="#A8D5F2" strokeWidth="10" strokeLinecap="round" opacity="0.75" />
-
-              {/* Secondary Road Networks */}
-              <path d="M 120,40 L 280,190 L 480,240 L 780,290" fill="none" stroke="#FFFFFF" strokeWidth="6" />
-              <path d="M 80,480 L 240,360 L 520,380 L 820,490" fill="none" stroke="#FFFFFF" strokeWidth="6" />
-              <path d="M 420,80 L 460,280 L 560,520" fill="none" stroke="#FFFFFF" strokeWidth="5" />
-              <path d="M 280,190 L 160,340 L 320,510" fill="none" stroke="#FFFFFF" strokeWidth="5" />
-              <path d="M 640,120 L 720,350 L 610,510" fill="none" stroke="#FFFFFF" strokeWidth="5" />
-
-              {/* Primary State Highways */}
-              <path d="M -20,240 Q 200,280 480,220 T 920,300" fill="none" stroke="#F5C067" strokeWidth="4" />
-              <path d="M 480,0 Q 510,180 520,320 T 560,560" fill="none" stroke="#F5C067" strokeWidth="4" />
-
-              {/* Highway Badges */}
-              <g transform="translate(200, 270)">
-                <rect x="-12" y="-9" width="24" height="18" rx="4" fill="#FFFFFF" stroke="#64748B" strokeWidth="1.5" />
-                <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#334155">17</text>
-              </g>
-              <g transform="translate(30, 435)">
-                <rect x="-12" y="-9" width="24" height="18" rx="4" fill="#FFFFFF" stroke="#64748B" strokeWidth="1.5" />
-                <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#334155">17</text>
-              </g>
-              <g transform="translate(500, 240)">
-                <rect x="-12" y="-9" width="24" height="18" rx="4" fill="#FFFFFF" stroke="#64748B" strokeWidth="1.5" />
-                <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#334155">17</text>
-              </g>
-              <g transform="translate(608, 142)">
-                <rect x="-12" y="-9" width="24" height="18" rx="4" fill="#EAB308" stroke="#FFFFFF" strokeWidth="1.5" />
-                <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#FFFFFF">51</text>
-              </g>
-
-              {/* Interactive Node Markers with Hover Callouts */}
-              {MAP_NODES.map((node) => {
-                const isOnline = node.status === 'ONLINE';
-                const isDegraded = node.status === 'DEGRADED';
-                const statusColor = isOnline ? '#22C55E' : isDegraded ? '#F59E0B' : '#EF4444';
-
-                return (
-                  <g 
-                    key={node.id} 
-                    transform={`translate(${node.x}, ${node.y})`}
-                    className="cursor-pointer transition-transform duration-150 hover:scale-125"
-                    onMouseEnter={(e) => handleNodeMouseMove(node, e)}
-                    onMouseLeave={() => setActiveHoverNode(null)}
-                  >
-                    {/* Node Dot */}
-                    <circle cx="0" cy="0" r="4.5" fill="#1E293B" />
-                    
-                    {/* Status Pulsating Ring */}
-                    <circle cx="0" cy="-12" r="5" fill={statusColor} />
-                    <circle cx="0" cy="-12" r="10" fill={statusColor} opacity="0.25" className="animate-ping" />
-
-                    {/* Town Text Labels in Clean English */}
-                    <text x="0" y="-22" textAnchor="middle" fontSize="11" fontWeight="800" fill="#0F172A">
-                      {node.name}
-                    </text>
-                    <text x="0" y="14" textAnchor="middle" fontSize="9" fontWeight="600" fill="#64748B">
-                      {node.category}
-                    </text>
-                  </g>
-                );
-              })}
-
-            </svg>
-          </div>
-
-          {/* Floating Hover Tooltip Popup Card */}
-          {activeHoverNode && (
-            <div 
-              className="absolute z-[2000] bg-white/95 backdrop-blur-md rounded-xl p-3.5 border border-slate-300 shadow-xl pointer-events-none transition-all duration-150 animate-in fade-in zoom-in-95"
-              style={{
-                left: `${activeHoverNode.node.x / 900 * 100}%`,
-                top: `${activeHoverNode.node.y / 550 * 100 - 15}%`,
-                transform: 'translate(-50%, -100%)',
-                minWidth: '220px'
-              }}
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
-                <div>
-                  <div className="font-bold text-xs text-slate-900">{activeHoverNode.node.name}</div>
-                  <div className="text-[10px] text-slate-500 font-medium">{activeHoverNode.node.category}</div>
-                </div>
-                <span 
-                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
-                    activeHoverNode.node.status === 'ONLINE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                    activeHoverNode.node.status === 'DEGRADED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                    'bg-rose-50 text-rose-700 border-rose-200'
-                  }`}
-                >
-                  ● {activeHoverNode.node.status}
-                </span>
-              </div>
-
-              <div className="space-y-1.5 text-[11px] font-sans text-slate-700">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">CCTV Cameras:</span>
-                  <strong className="text-slate-900 font-bold">{activeHoverNode.node.totalCameras} Units</strong>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">AI Enabled:</span>
-                  <strong className="text-[#0052CC] font-bold">{activeHoverNode.node.aiCameras} Cameras</strong>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">VMS Platform:</span>
-                  <span className="font-semibold text-slate-800">{activeHoverNode.node.vms}</span>
-                </div>
-                <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px]">
-                  <span className="text-slate-500">Telemetry:</span>
-                  <span className="font-mono font-bold text-slate-700">{activeHoverNode.node.fps} FPS • {activeHoverNode.node.resolution}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Leaflet Map Div Container */}
+          <div ref={mapContainerRef} className="w-full h-full z-0" />
 
           {/* Floating Legend Box (Top Left) */}
-          <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-200/90 shadow-md">
+          <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-200/90 shadow-md">
             <div className="text-xs font-bold text-slate-900 mb-2">
               Statewide Coverage
             </div>
@@ -379,25 +352,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 <span>Degraded</span>
               </div>
             </div>
-          </div>
-
-          {/* Floating Zoom Controls (Bottom Right) */}
-          <div className="absolute bottom-4 right-4 bg-white rounded-full border border-slate-300 shadow-md flex items-center px-1.5 py-1 space-x-1">
-            <button 
-              onClick={() => setZoomLevel(prev => Math.min(1.6, prev + 0.15))}
-              className="p-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-full transition"
-              title="Zoom In"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <div className="w-[1px] h-3.5 bg-slate-300"></div>
-            <button 
-              onClick={() => setZoomLevel(prev => Math.max(0.8, prev - 0.15))}
-              className="p-1 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-full transition"
-              title="Zoom Out"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
           </div>
 
         </div>

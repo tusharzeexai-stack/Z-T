@@ -127,14 +127,34 @@ export const VehicleJourneyView: React.FC<VehicleJourneyViewProps> = ({
       const marker = L.marker([s.latitude, s.longitude], { icon });
 
       const popupHtml = `
-        <div style="font-family: sans-serif; font-size: 11px;">
-          <div style="font-weight: 900; color: #0052CC; font-family: monospace;">SIGHTING #${numLabel} • ${s.plateNumber}</div>
-          <div style="font-weight: bold; color: #0F172A; margin-top: 2px;">${s.cameraName}</div>
-          <div style="color: #64748B; font-size: 10px;">${s.timestamp}</div>
+        <div style="font-family:'Plus Jakarta Sans',Inter,sans-serif;font-size:11px;min-width:200px;padding:2px;">
+          <div style="font-weight:900;color:#0052CC;font-family:monospace;font-size:12px;">SIGHTING #${numLabel} &bull; ${s.plateNumber}</div>
+          <div style="font-weight:700;color:#0F172A;margin-top:3px;">${s.cameraName}</div>
+          <div style="color:#64748B;font-size:10px;margin-top:1px;font-family:monospace;">${s.cameraCode}</div>
+          <hr style="border:none;border-top:1px solid #E2E8F0;margin:5px 0;"/>
+          <div style="color:#475569;font-size:10px;">
+            <span style="font-weight:600;">Time:</span> ${s.timestamp}
+          </div>
+          <div style="color:#475569;font-size:10px;margin-top:2px;">
+            <span style="font-weight:600;">District:</span> ${s.district} &nbsp;|&nbsp;
+            <span style="font-weight:600;">Dir:</span> ${s.direction}
+          </div>
+          <div style="margin-top:3px;display:flex;align-items:center;gap:5px;">
+            <span style="background:${s.watchlistFlag ? '#FEE2E2' : '#DCFCE7'};color:${s.watchlistFlag ? '#991B1B' : '#166534'};font-size:9px;font-weight:700;padding:1px 6px;border-radius:9999px;">
+              ${s.watchlistFlag ? '⚠ WATCHLIST' : '✔ CLEAR'}
+            </span>
+            <span style="color:#64748B;font-size:10px;">ANPR: ${s.confidence}%</span>
+          </div>
         </div>
       `;
 
-      marker.bindPopup(popupHtml);
+      const popup = L.popup({ closeButton: false, offset: [0, -10], className: 'ztrac-hover-popup' }).setContent(popupHtml);
+      marker.bindPopup(popup);
+
+      // Show popup on hover, close on mouse-out
+      marker.on('mouseover', function() { marker.openPopup(); });
+      marker.on('mouseout',  function() { marker.closePopup(); });
+      // Click still selects the sighting in the timeline
       marker.on('click', () => setSelectedSightingId(s.id));
 
       markersGroupRef.current?.addLayer(marker);

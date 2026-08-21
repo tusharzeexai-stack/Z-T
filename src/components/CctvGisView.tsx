@@ -181,18 +181,38 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
 
         const marker = L.marker([cam.latitude, cam.longitude], { icon });
 
+        const statusColor = cam.healthStatus === 'ONLINE' ? '#166534' : cam.healthStatus === 'DEGRADED' ? '#92400E' : '#991B1B';
+        const statusBg   = cam.healthStatus === 'ONLINE' ? '#DCFCE7' : cam.healthStatus === 'DEGRADED' ? '#FEF3C7' : '#FEE2E2';
         const popupContent = `
-          <div style="font-family: sans-serif; font-size: 12px; padding: 2px;">
-            <div style="font-weight: bold; font-family: monospace; color: #0052CC;">${cam.cameraCode}</div>
-            <div style="font-weight: bold; color: #0F172A; margin-top: 2px;">${cam.name}</div>
-            <div style="color: #64748B; font-size: 11px; margin-top: 2px;">${cam.district} • ${cam.departmentName}</div>
-            <div style="margin-top: 6px; font-weight: bold; color: ${cam.healthStatus === 'ONLINE' ? '#166534' : '#991B1B'};">
-              Status: ${cam.healthStatus} (${cam.fps} FPS)
+          <div style="font-family:'Plus Jakarta Sans',Inter,sans-serif;font-size:12px;padding:4px 2px;min-width:210px;">
+            <div style="font-weight:800;font-family:monospace;color:#0052CC;letter-spacing:.04em;">${cam.cameraCode}</div>
+            <div style="font-weight:700;color:#0F172A;margin-top:3px;font-size:13px;">${cam.name}</div>
+            <div style="color:#64748B;font-size:11px;margin-top:2px;">${cam.district} &bull; ${cam.departmentName}</div>
+            <hr style="border:none;border-top:1px solid #E2E8F0;margin:6px 0;"/>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="background:${statusBg};color:${statusColor};font-weight:700;font-size:10px;padding:2px 7px;border-radius:9999px;border:1px solid ${statusColor}40;">${cam.healthStatus}</span>
+              <span style="color:#64748B;font-size:10px;">${cam.fps} FPS &bull; ${cam.resolution}</span>
+            </div>
+            <div style="margin-top:5px;color:#475569;font-size:10px;">
+              <span style="font-weight:600;">Type:</span> ${cam.type} &nbsp;|&nbsp;
+              <span style="font-weight:600;">Lifecycle:</span> ${cam.lifecycle}
+            </div>
+            <div style="margin-top:3px;color:#64748B;font-size:10px;">
+              <span style="font-weight:600;">VMS:</span> ${cam.vmsPlatformName}
+            </div>
+            <div style="margin-top:3px;color:#94A3B8;font-size:9.5px;font-family:monospace;">
+              ${cam.latitude.toFixed(5)}, ${cam.longitude.toFixed(5)}
             </div>
           </div>
         `;
 
-        marker.bindPopup(popupContent);
+        const popup = L.popup({ closeButton: false, offset: [0, -10], className: 'ztrac-hover-popup' }).setContent(popupContent);
+        marker.bindPopup(popup);
+
+        // Open popup on hover, close on mouse-out
+        marker.on('mouseover', function() { marker.openPopup(); });
+        marker.on('mouseout',  function() { marker.closePopup(); });
+        // Click still selects the camera
         marker.on('click', () => setSelectedCamera(cam));
         markersGroupRef.current?.addLayer(marker);
       });

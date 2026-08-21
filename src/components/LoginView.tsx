@@ -30,7 +30,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack, de
   const rbacRolesList: {
     role: UserRole;
     title: string;
-    titleGu: string;
     designation: string;
     description: string;
     accessLevel: string;
@@ -41,7 +40,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack, de
     {
       role: 'STATE_ADMIN',
       title: 'State Administrator',
-      titleGu: 'રાજ્ય વહીવટકર્તા',
       designation: 'IPS / IAS — State Level',
       description: 'Full statewide governance, all districts, departments, system configuration, and reporting.',
       accessLevel: 'LEVEL 5 — MOST PRIVILEGED',
@@ -59,7 +57,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack, de
     {
       role: 'DISTRICT_ADMIN',
       title: 'District Administrator',
-      titleGu: 'જિલ્લા વહીવટકર્તા',
       designation: 'IAS / District Collector',
       description: 'District-scoped admin, cameras, gap analysis, municipal assets, onboarding.',
       accessLevel: 'LEVEL 4 — RESTRICTED',
@@ -77,7 +74,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack, de
     {
       role: 'CONTROL_ROOM_OPERATOR',
       title: 'Control Room Operator',
-      titleGu: 'કંટ્રોલ રૂમ ઓપરેટર',
       designation: 'Inspector / Sub-Inspector',
       description: 'Live 24×7 video wall monitoring, real-time alert triage, camera telemetry.',
       accessLevel: 'LEVEL 3 — CONFIDENTIAL',
@@ -95,7 +91,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack, de
     {
       role: 'POLICE_OFFICER',
       title: 'Police Field Officer',
-      titleGu: 'પોલીસ ક્ષેત્ર અધિકારી',
       designation: 'ASI / Constable / HC',
       description: 'ANPR vehicle search, cross-camera journey tracking, SHA-256 evidence vault.',
       accessLevel: 'LEVEL 3 — CONFIDENTIAL',
@@ -351,7 +346,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack, de
                           </div>
                           {/* Role Body */}
                           <div className={`px-4 py-3 ${isSelected ? 'bg-blue-50' : 'bg-white'} transition`}>
-                            <div className="text-[10px] text-slate-500 mb-1">{item.titleGu} · {item.designation}</div>
+                            <div className="text-[10px] text-slate-500 mb-1">{item.designation}</div>
                             <div className="text-[10px] font-mono font-bold text-slate-800 mb-1.5">{item.user.name}</div>
                             <div className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase" style={{ background: item.accessColor + '18', color: item.accessColor, border: `1px solid ${item.accessColor}40` }}>
                               {item.accessLevel}

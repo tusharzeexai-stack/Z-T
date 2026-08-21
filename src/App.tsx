@@ -600,15 +600,41 @@ function MainApp() {
         )}
 
         {/* MODEL 1: Administration */}
-        {activeTab === 'administration' && (
-          <AdministrationView />
-        )}
-
         {/* MODEL 1: Audit Logs */}
-        {activeTab === 'audit' && (
+        {activeTab === 'audit-logs' && (
           <AuditLogsView
             logs={auditLogs}
             currentLang={currentLang}
+          />
+        )}
+
+        {/* MODEL 1: System Administration & User Management */}
+        {activeTab === 'administration' && (
+          <AdministrationView
+            departments={departments}
+            districts={districts}
+            onAddUser={(newUser) => {
+              const newLog: AuditLog = {
+                id: `aud-${Date.now().toString().slice(-4)}`,
+                timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+                user: {
+                  name: currentUser.name,
+                  badge: currentUser.badge,
+                  role: currentRole,
+                  avatar: currentUser.avatar,
+                },
+                action: 'CREATE_CAMERA',
+                resource: `USER: ${newUser.badge} (${newUser.name})`,
+                district: newUser.district || 'Statewide',
+                result: 'Success',
+                ip: '10.142.1.25 (State WAN)',
+                diffPayload: [
+                  { field: 'role', before: 'null', after: newUser.role },
+                  { field: 'email', before: 'null', after: newUser.email },
+                ],
+              };
+              setAuditLogs(prev => [newLog, ...prev]);
+            }}
           />
         )}
 

@@ -165,6 +165,8 @@ export interface User {
   name: string;
   badge: string;
   email: string;
+  mobile?: string;
+  passphrase?: string;
   role: UserRole;
   departmentId?: string;
   departmentName?: string;
@@ -172,6 +174,7 @@ export interface User {
   avatar: string;
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
   lastLogin: string;
+  allowedModules?: string[];
 }
 
 export type AuditActionType =

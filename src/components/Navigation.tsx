@@ -27,7 +27,8 @@ import {
   ChevronRight,
   Shield,
   Video,
-  X
+  X,
+  Star
 } from 'lucide-react';
 
 export type NavTab =
@@ -68,94 +69,86 @@ interface NavigationProps {
 
 const ROLE_ALLOWED_TABS: Record<UserRole, NavTab[]> = {
   STATE_ADMIN: [
-    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
-    'alerts', 'investigations', 'federation-overview', 'vms-management', 'connectors',
-    'event-flow', 'gis', 'registry', 'onboarding', 'health', 'departments',
-    'districts', 'gap-analysis', 'reports', 'administration', 'audit'
+    'overview', 'sentinel-live-wall', 'command-center', 'live-view', 'anpr-search', 'alerts',
+    'gis', 'vehicle-journey', 'registry', 'onboarding', 'health', 'investigations',
+    'administration', 'audit', 'reports', 'gap-analysis', 'departments', 'districts',
+    'federation-overview', 'vms-management', 'connectors', 'event-flow'
   ],
   DISTRICT_ADMIN: [
-    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
-    'alerts', 'gis', 'registry', 'onboarding', 'health', 'districts',
-    'gap-analysis', 'reports', 'administration', 'audit'
+    'overview', 'sentinel-live-wall', 'command-center', 'live-view', 'anpr-search', 'alerts',
+    'gis', 'vehicle-journey', 'registry', 'onboarding', 'health',
+    'administration', 'audit', 'reports', 'gap-analysis', 'districts'
   ],
   DEPARTMENT_ADMIN: [
-    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'gis', 'registry', 'onboarding',
-    'health', 'departments', 'reports', 'administration', 'audit'
+    'overview', 'sentinel-live-wall', 'command-center', 'live-view', 'gis', 'registry', 'onboarding',
+    'health', 'administration', 'audit', 'reports', 'departments'
   ],
   DISTRICT_OFFICER: [
-    'overview', 'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
-    'alerts', 'gis', 'registry', 'health', 'districts', 'gap-analysis', 'reports'
+    'overview', 'sentinel-live-wall', 'command-center', 'live-view', 'anpr-search', 'alerts',
+    'gis', 'vehicle-journey', 'registry', 'health', 'reports', 'districts', 'gap-analysis'
   ],
   CONTROL_ROOM_OPERATOR: [
-    'command-center', 'live-view', 'sentinel-live-wall', 'anpr-search', 'vehicle-journey',
-    'alerts', 'gis', 'health'
+    'sentinel-live-wall', 'command-center', 'live-view', 'anpr-search', 'alerts',
+    'gis', 'vehicle-journey', 'health'
   ],
   POLICE_OFFICER: [
     'anpr-search', 'vehicle-journey', 'alerts', 'investigations',
-    'command-center', 'live-view', 'sentinel-live-wall', 'gis', 'registry', 'reports', 'audit'
+    'sentinel-live-wall', 'command-center', 'live-view', 'gis', 'registry', 'reports', 'audit'
   ],
   STATE_AUDITOR: [
     'overview', 'gis', 'registry', 'health', 'reports', 'audit'
   ]
 };
 
-// Sidebar group definitions
+// Sidebar group definitions with IMPORTANT TOP SECTIONS first
 const NAV_GROUPS: {
   label: string;
+  isImportant?: boolean;
   items: { id: NavTab; label: string; shortLabel: string; icon: React.ElementType; badge?: 'alerts' | 'health' }[]
 }[] = [
   {
-    label: 'Dashboard',
+    label: '⭐ IMPORTANT — CORE OPERATIONS',
+    isImportant: true,
     items: [
-      { id: 'overview', label: 'Overview', shortLabel: 'Overview', icon: LayoutDashboard },
+      { id: 'overview', label: 'Overview Dashboard', shortLabel: 'Overview', icon: LayoutDashboard },
+      { id: 'sentinel-live-wall', label: 'Sentinel Live (31 Feeds)', shortLabel: 'Sentinel', icon: Radio },
+      { id: 'command-center', label: 'Command Center Video Wall', shortLabel: 'Command', icon: MonitorPlay },
+      { id: 'anpr-search', label: 'ANPR Vehicle Search', shortLabel: 'ANPR', icon: ScanLine },
+      { id: 'alerts', label: 'Real-Time Alert Center', shortLabel: 'Alerts', icon: BellRing, badge: 'alerts' },
+      { id: 'live-view', label: 'Live Stream Grid', shortLabel: 'Live Grid', icon: Tv2 },
     ]
   },
   {
-    label: 'Surveillance',
+    label: 'CCTV ASSETS & MAPS',
     items: [
-      { id: 'command-center', label: 'Command Center', shortLabel: 'Command', icon: MonitorPlay },
-      { id: 'live-view', label: 'Live Wall', shortLabel: 'Live Wall', icon: Tv2 },
-      { id: 'sentinel-live-wall', label: 'Sentinel Live (31)', shortLabel: 'Sentinel', icon: Radio },
-    ]
-  },
-  {
-    label: 'Intelligence',
-    items: [
-      { id: 'anpr-search', label: 'ANPR Search', shortLabel: 'ANPR', icon: ScanLine },
-      { id: 'vehicle-journey', label: 'Vehicle Journey', shortLabel: 'Journey', icon: Route },
-      { id: 'alerts', label: 'Alert Center', shortLabel: 'Alerts', icon: BellRing, badge: 'alerts' },
-      { id: 'investigations', label: 'Investigations', shortLabel: 'Invest.', icon: FolderSearch },
-    ]
-  },
-  {
-    label: 'Federation',
-    items: [
-      { id: 'federation-overview', label: 'Federation', shortLabel: 'Fed.', icon: Network },
-      { id: 'vms-management', label: 'VMS Systems', shortLabel: 'VMS', icon: Server },
-      { id: 'connectors', label: 'Connectors', shortLabel: 'Conn.', icon: Plug },
-      { id: 'event-flow', label: 'Event Pipeline', shortLabel: 'Events', icon: GitBranch },
-    ]
-  },
-  {
-    label: 'Assets',
-    items: [
-      { id: 'gis', label: 'CCTV GIS Map', shortLabel: 'GIS', icon: Map },
+      { id: 'gis', label: 'CCTV GIS Spatial Map', shortLabel: 'GIS Map', icon: Map },
+      { id: 'vehicle-journey', label: '3D Vehicle Journey Tracker', shortLabel: 'Journey', icon: Route },
       { id: 'registry', label: 'Camera Registry', shortLabel: 'Registry', icon: Camera },
-      { id: 'onboarding', label: 'Onboarding', shortLabel: 'Onboard', icon: UserPlus },
-      { id: 'health', label: 'Health Monitoring', shortLabel: 'Health', icon: Activity, badge: 'health' },
+      { id: 'onboarding', label: 'Camera Onboarding', shortLabel: 'Onboard', icon: UserPlus },
+      { id: 'health', label: 'Health Telemetry', shortLabel: 'Health', icon: Activity, badge: 'health' },
+      { id: 'investigations', label: 'Case Investigations', shortLabel: 'Invest.', icon: FolderSearch },
     ]
   },
   {
-    label: 'Administration',
+    label: 'USER ADMIN & GOVERNANCE',
     items: [
-      { id: 'departments', label: 'Departments', shortLabel: 'Depts.', icon: Building2 },
-      { id: 'districts', label: 'Districts', shortLabel: 'Districts', icon: Landmark },
-      { id: 'gap-analysis', label: 'Gap Analysis', shortLabel: 'Gaps', icon: BarChart3 },
-      { id: 'reports', label: 'Reports', shortLabel: 'Reports', icon: ClipboardList },
-      { id: 'administration', label: 'Administration', shortLabel: 'Admin', icon: SlidersHorizontal },
-      { id: 'audit', label: 'Audit Log', shortLabel: 'Audit', icon: Shield },
+      { id: 'administration', label: 'User Admin & Access Control', shortLabel: 'User Admin', icon: SlidersHorizontal },
+      { id: 'audit', label: 'Immutable Audit Ledger', shortLabel: 'Audit', icon: ClipboardList },
+      { id: 'reports', label: 'Official Reports Generator', shortLabel: 'Reports', icon: BarChart3 },
+      { id: 'gap-analysis', label: 'Gap Analysis DPR', shortLabel: 'Gap DPR', icon: Landmark },
+      { id: 'departments', label: 'Department Registry', shortLabel: 'Depts', icon: Building2 },
+      { id: 'districts', label: 'District Jurisdiction', shortLabel: 'Districts', icon: Landmark },
     ]
   },
+  {
+    label: 'FEDERATION & PIPELINE',
+    items: [
+      { id: 'federation-overview', label: 'VMS Federation Overview', shortLabel: 'Federation', icon: Network },
+      { id: 'vms-management', label: 'VMS Reference Systems', shortLabel: 'VMS', icon: Server },
+      { id: 'connectors', label: 'VMS Connectors', shortLabel: 'Conn.', icon: Plug },
+      { id: 'event-flow', label: 'Event Pipeline DLQ', shortLabel: 'Events', icon: GitBranch },
+    ]
+  }
 ];
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -168,150 +161,152 @@ export const Navigation: React.FC<NavigationProps> = ({
   onCloseMobile,
 }) => {
   const { currentRole } = useRBAC();
-  const handleTab = (tab: string) => {
-    if (onSelectTab) onSelectTab(tab);
-    else if (onTabChange) onTabChange(tab);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleTabClick = (tabId: string) => {
+    if (onSelectTab) onSelectTab(tabId);
+    if (onTabChange) onTabChange(tabId);
     if (onCloseMobile) onCloseMobile();
   };
-  const [collapsed, setCollapsed] = useState(false);
 
   const allowedTabs = ROLE_ALLOWED_TABS[currentRole] || ROLE_ALLOWED_TABS.STATE_ADMIN;
 
-  const getBadgeCount = (badge?: 'alerts' | 'health') => {
-    if (badge === 'alerts') return activeAlertsCount;
-    if (badge === 'health') return healthAlertsCount;
-    return 0;
-  };
-
-  return (
-    <>
-      {/* Mobile Backdrop Overlay */}
-      {isMobileOpen && (
-        <div
-          onClick={onCloseMobile}
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden transition-opacity"
-        />
-      )}
-
-      <aside
-        className={`h-screen bg-[#0d1f3c] flex flex-col flex-shrink-0 transition-all duration-300 select-none z-50
-          fixed inset-y-0 left-0 lg:static lg:translate-x-0
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${collapsed ? 'w-14' : 'w-56'}
-        `}
-      >
-        {/* Sidebar Logo / Brand */}
-        <div className={`flex items-center justify-between border-b border-[#1e3358] flex-shrink-0 ${collapsed ? 'px-2 py-3' : 'px-4 py-3'}`}>
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#0052CC] flex items-center justify-center flex-shrink-0 shadow">
-              <Video className="w-4 h-4 text-white" />
-            </div>
-            {!collapsed && (
-              <div className="overflow-hidden">
-                <div className="text-white font-black text-sm leading-tight tracking-tight truncate">Z-TRACS</div>
-                <div className="text-[9px] text-slate-400 font-medium truncate">Gujarat Police</div>
-              </div>
-            )}
+  const renderNavContent = () => (
+    <div className="flex flex-col h-full select-none">
+      
+      {/* Sidebar Header */}
+      <div className="p-3.5 border-b border-[#00385C] flex items-center justify-between">
+        <div className="flex items-center space-x-2.5 overflow-hidden">
+          <div className="w-8 h-8 rounded-lg bg-[#0072CE] flex items-center justify-center text-white font-black text-xs shrink-0 shadow-md">
+            ZT
           </div>
-
-          {/* Close button for Mobile Drawer */}
-          {onCloseMobile && (
-            <button
-              onClick={onCloseMobile}
-              className="lg:hidden p-1 rounded bg-[#1e3358] text-slate-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          {!isCollapsed && (
+            <div className="leading-tight">
+              <div className="font-extrabold text-white text-xs tracking-wider uppercase">Z-TRACS GRID</div>
+              <div className="text-[10px] text-slate-400 font-mono">Gujarat Police</div>
+            </div>
           )}
         </div>
 
-        {/* Nav Groups — scrollable */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700">
-          {NAV_GROUPS.map(group => {
-            const visibleItems = group.items.filter(item => allowedTabs.includes(item.id));
-            if (visibleItems.length === 0) return null;
+        {/* Desktop Collapse Toggle */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="hidden lg:flex p-1 text-slate-400 hover:text-white rounded hover:bg-[#00385C] transition"
+          title={isCollapsed ? 'Expand Navigation' : 'Collapse Navigation'}
+        >
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
 
-            return (
-              <div key={group.label} className="mb-1">
-                {/* Group Label */}
-                {!collapsed && (
-                  <div className="px-4 pt-3 pb-1">
-                    <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500">{group.label}</span>
-                  </div>
-                )}
-                {collapsed && <div className="my-1 border-t border-[#1e3358]" />}
+        {/* Mobile Close Button */}
+        <button
+          onClick={onCloseMobile}
+          className="lg:hidden p-1 text-slate-400 hover:text-white rounded hover:bg-[#00385C]"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-                {visibleItems.map(item => {
-                  const isActive = activeTab === item.id;
-                  const badgeCount = getBadgeCount(item.badge);
-                  const Icon = item.icon;
+      {/* Navigation Group Items */}
+      <div className="flex-1 overflow-y-auto py-3 space-y-4 px-2 no-scrollbar">
+        {NAV_GROUPS.map((group, gIdx) => {
+          const visibleItems = group.items.filter(item => allowedTabs.includes(item.id));
+          if (visibleItems.length === 0) return null;
 
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleTab(item.id)}
-                      title={collapsed ? item.label : undefined}
-                      className={`w-full flex items-center transition-all duration-150 cursor-pointer group relative
-                        ${collapsed ? 'justify-center px-0 py-2.5' : 'px-4 py-2 space-x-2.5'}
-                        ${isActive
-                          ? 'bg-[#0052CC] text-white'
-                          : 'text-slate-400 hover:text-white hover:bg-[#1a3258]'
-                        }
-                      `}
-                    >
-                      {/* Active indicator bar */}
-                      {isActive && (
-                        <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-300 rounded-r" />
+          return (
+            <div key={gIdx} className="space-y-1">
+              
+              {/* Section Header Label */}
+              {!isCollapsed ? (
+                <div className={`px-2.5 py-1 text-[10px] font-extrabold tracking-wider uppercase flex items-center justify-between ${
+                  group.isImportant ? 'text-amber-400 bg-amber-500/10 rounded border border-amber-500/20 my-1' : 'text-slate-400'
+                }`}>
+                  <span className="flex items-center space-x-1">
+                    {group.isImportant && <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
+                    <span>{group.label}</span>
+                  </span>
+                </div>
+              ) : (
+                <div className="w-full border-t border-[#00385C] my-2" />
+              )}
+
+              {/* Group Nav Buttons */}
+              {visibleItems.map(item => {
+                const isActive = activeTab === item.id;
+                const IconComp = item.icon;
+
+                let badgeCount = 0;
+                if (item.badge === 'alerts') badgeCount = activeAlertsCount;
+                if (item.badge === 'health') badgeCount = healthAlertsCount;
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleTabClick(item.id)}
+                    title={isCollapsed ? item.label : undefined}
+                    className={`w-full flex items-center px-2.5 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                      isActive 
+                        ? 'bg-[#0072CE] text-white shadow-sm ring-1 ring-blue-300/30 font-bold' 
+                        : 'text-slate-300 hover:bg-[#00385C] hover:text-white'
+                    } ${isCollapsed ? 'justify-center' : 'justify-between'}`}
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <IconComp className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                      {!isCollapsed && (
+                        <span className="truncate">{item.label}</span>
                       )}
+                    </div>
 
-                      <Icon className={`flex-shrink-0 transition-colors ${collapsed ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                    {!isCollapsed && badgeCount > 0 && (
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                        item.badge === 'alerts' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
+                      }`}>
+                        {badgeCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
 
-                      {!collapsed && (
-                        <span className={`text-[11px] font-semibold truncate flex-1 text-left leading-tight ${isActive ? 'text-white font-bold' : ''}`}>
-                          {item.label}
-                        </span>
-                      )}
-
-                      {/* Badge */}
-                      {badgeCount > 0 && (
-                        <span className={`rounded-full text-[9px] font-bold font-mono bg-rose-500 text-white flex-shrink-0
-                          ${collapsed ? 'absolute top-1 right-1 w-3.5 h-3.5 flex items-center justify-center' : 'px-1.5 py-0.5'}
-                        `}>
-                          {badgeCount}
-                        </span>
-                      )}
-
-                      {/* Tooltip on collapsed */}
-                      {collapsed && (
-                        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-[11px] font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                          {item.label}
-                          {badgeCount > 0 && <span className="ml-1 px-1 bg-rose-500 rounded text-[9px]">{badgeCount}</span>}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
+      {/* Sidebar Footer Role Card */}
+      {!isCollapsed && (
+        <div className="p-3 border-t border-[#00385C] bg-[#001D31]">
+          <div className="flex items-center space-x-2 text-[11px] text-slate-400">
+            <Shield className="w-3.5 h-3.5 text-[#0072CE]" />
+            <span className="font-mono text-[10px] text-emerald-400 font-bold">STATE WAN SECURED</span>
+          </div>
         </div>
+      )}
 
-        {/* Collapse Toggle Button (Desktop only) */}
-        <div className="border-t border-[#1e3358] p-2 flex-shrink-0 hidden lg:block">
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            className={`w-full flex items-center justify-center py-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#1a3258] transition text-[11px] font-semibold space-x-2`}
-            title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : (
-              <>
-                <ChevronLeft className="w-4 h-4" />
-                <span>Collapse</span>
-              </>
-            )}
-          </button>
-        </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Vertical Sidebar */}
+      <aside 
+        className={`hidden lg:flex flex-col bg-[#00253E] border-r border-[#00385C] text-white transition-all duration-300 h-screen sticky top-0 ${
+          isCollapsed ? 'w-16' : 'w-64'
+        }`}
+      >
+        {renderNavContent()}
       </aside>
+
+      {/* Mobile Slide-Over Drawer */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div 
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" 
+            onClick={onCloseMobile}
+          />
+          <div className="relative w-72 bg-[#00253E] h-full shadow-2xl z-10">
+            {renderNavContent()}
+          </div>
+        </div>
+      )}
     </>
   );
 };

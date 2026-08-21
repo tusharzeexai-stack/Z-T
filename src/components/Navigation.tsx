@@ -27,8 +27,7 @@ import {
   ChevronRight,
   Shield,
   Video,
-  X,
-  Star
+  X
 } from 'lucide-react';
 
 export type NavTab =
@@ -100,15 +99,13 @@ const ROLE_ALLOWED_TABS: Record<UserRole, NavTab[]> = {
   ]
 };
 
-// Sidebar group definitions with IMPORTANT TOP SECTIONS first
+// Clean, unified Sidebar Group Definitions
 const NAV_GROUPS: {
   label: string;
-  isImportant?: boolean;
   items: { id: NavTab; label: string; shortLabel: string; icon: React.ElementType; badge?: 'alerts' | 'health' }[]
 }[] = [
   {
-    label: '⭐ IMPORTANT — CORE OPERATIONS',
-    isImportant: true,
+    label: 'CORE OPERATIONS',
     items: [
       { id: 'overview', label: 'Overview Dashboard', shortLabel: 'Overview', icon: LayoutDashboard },
       { id: 'sentinel-live-wall', label: 'Sentinel Live (31 Feeds)', shortLabel: 'Sentinel', icon: Radio },
@@ -215,15 +212,10 @@ export const Navigation: React.FC<NavigationProps> = ({
           return (
             <div key={gIdx} className="space-y-1">
               
-              {/* Section Header Label */}
+              {/* Clean Section Header Label */}
               {!isCollapsed ? (
-                <div className={`px-2.5 py-1 text-[10px] font-extrabold tracking-wider uppercase flex items-center justify-between ${
-                  group.isImportant ? 'text-amber-400 bg-amber-500/10 rounded border border-amber-500/20 my-1' : 'text-slate-400'
-                }`}>
-                  <span className="flex items-center space-x-1">
-                    {group.isImportant && <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />}
-                    <span>{group.label}</span>
-                  </span>
+                <div className="px-2.5 pt-2 pb-1 text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">
+                  {group.label}
                 </div>
               ) : (
                 <div className="w-full border-t border-[#00385C] my-2" />

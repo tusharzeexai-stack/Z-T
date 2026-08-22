@@ -1,6 +1,6 @@
 """
 Z-TRACS AWS S3 Evidence Vault Complete Verification Suite
-Executes Steps 7, 8, 9, 10, 17, 18 verification queries for S3 bucket connectivity, PutObject, GetObject, DeleteObject, and Presigned URLs.
+Executes STS caller identity check, S3 bucket connectivity, PutObject, GetObject, DeleteObject, and Presigned URLs.
 """
 import os
 import sys
@@ -8,11 +8,17 @@ import asyncio
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
+from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 app_dir = os.path.dirname(current_dir)
 backend_dir = os.path.dirname(app_dir)
 sys.path.insert(0, backend_dir)
+
+# Explicitly load backend/.env
+env_path = os.path.join(backend_dir, ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)
 
 from app.core.config import settings
 
@@ -22,13 +28,30 @@ def run_s3_verification_suite():
     print("=" * 80)
     print(f"Target AWS Region:      {settings.AWS_REGION}")
     print(f"Target S3 Bucket:       {settings.AWS_S3_BUCKET_NAME}")
-    print(f"IAM Access Key Configured: {'YES' if settings.AWS_ACCESS_KEY_ID else 'NO (Local Fallback)'}")
+    
+    key_display = "NO (Local Fallback)"
+    if settings.AWS_ACCESS_KEY_ID and not settings.AWS_ACCESS_KEY_ID.startswith("YOUR_IAM"):
+        key_display = f"YES ({settings.AWS_ACCESS_KEY_ID[:6]}...{settings.AWS_ACCESS_KEY_ID[-4:]})"
+    print(f"IAM Access Key Configured: {key_display}")
     print("-" * 80)
 
     session_kwargs = {"region_name": settings.AWS_REGION}
-    if settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY:
+    if settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and not settings.AWS_ACCESS_KEY_ID.startswith("YOUR_IAM"):
         session_kwargs["aws_access_key_id"] = settings.AWS_ACCESS_KEY_ID
         session_kwargs["aws_secret_access_key"] = settings.AWS_SECRET_ACCESS_KEY
+
+    # STEP 0: STS GetCallerIdentity Authentication Check
+    print("[STEP 0] Verifying AWS IAM Credentials via STS get_caller_identity()...")
+    try:
+        sts_client = boto3.client("sts", **session_kwargs)
+        identity = sts_client.get_caller_identity()
+        print(f"  [SUCCESS] Authenticated IAM User ARN: {identity.get('Arn')}")
+        print(f"  -> AWS Account ID: {identity.get('Account')}")
+        print(f"  -> IAM User ID:    {identity.get('UserId')}")
+    except Exception as e:
+        print(f"  [AUTHENTICATION ERROR] STS check failed: {e}")
+        print("  -> Please verify your active AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY in backend/.env")
+    print("-" * 80)
 
     s3_client = boto3.client(
         "s3",
@@ -44,7 +67,6 @@ def run_s3_verification_suite():
     except ClientError as e:
         error_code = e.response.get("Error", {}).get("Code")
         print(f"  [S3 HEAD_BUCKET NOTE] Bucket check returned status code '{error_code}'.")
-        print("  -> Ensure your IAM User has s3:ListBucket & s3:GetObject permissions.")
 
     # STEP 8: PutObject Test
     test_key = "tests/test-ztracs-evidence.txt"

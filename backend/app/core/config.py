@@ -20,7 +20,7 @@ class Settings:
     POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "postgres")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "ztracs")
     
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 

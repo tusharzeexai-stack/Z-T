@@ -31,6 +31,7 @@ interface CctvGisViewProps {
   onSelectCamera: (camera: Camera) => void;
   selectedDistrictFilter?: string;
   selectedDeptFilter?: string;
+  selectedStatusFilter?: string;
 }
 
 interface DistrictHubCard {
@@ -317,12 +318,13 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   onSelectCamera,
   selectedDistrictFilter = 'ALL',
   selectedDeptFilter = 'ALL',
+  selectedStatusFilter = 'ALL',
 }) => {
   const [selectedCamera, setSelectedCamera] = useState<Camera | null>(cameras[0] || null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState(selectedDeptFilter);
   const [selectedDistrict, setSelectedDistrict] = useState(selectedDistrictFilter);
-  const [selectedStatus, setSelectedStatus] = useState(selectedStatusFilter || 'ALL');
+  const [selectedStatus, setSelectedStatus] = useState(selectedStatusFilter);
   const [activeTileLayerKey, setActiveTileLayerKey] = useState<keyof typeof TILE_LAYERS>('googleHybrid');
   const [isLayerDrawerOpen, setIsLayerDrawerOpen] = useState(false);
 

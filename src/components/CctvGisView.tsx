@@ -21,7 +21,8 @@ import {
   Building2,
   ShieldCheck,
   PieChart,
-  Navigation
+  Navigation,
+  X
 } from 'lucide-react';
 
 interface CctvGisViewProps {
@@ -333,11 +334,18 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
 
-  // Dynamic search navigation effect for instant flyTo on search query
+  // Dynamic search navigation effect: Auto-flyTo on search query & reset when cleared
   useEffect(() => {
-    if (!searchQuery.trim() || !mapInstanceRef.current) return;
-    const q = searchQuery.toLowerCase().trim();
+    if (!mapInstanceRef.current) return;
 
+    if (!searchQuery.trim()) {
+      // When search query is cleared, automatically reset district to 'ALL' and fly back to Statewide Gujarat View!
+      setSelectedDistrict('ALL');
+      mapInstanceRef.current.flyTo([22.45, 71.85], 8, { duration: 1.2 });
+      return;
+    }
+
+    const q = searchQuery.toLowerCase().trim();
     const matchedDist = GUJARAT_33_DISTRICTS.find(d => 
       d.name.toLowerCase().includes(q) || 
       d.districtKey.toLowerCase().includes(q)
@@ -408,7 +416,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     });
   };
 
-  // Helper for rendering Sub-Hub Bifurcation Sector Markers (e.g., Bhuj City, Kandla Port, Mundra Port)
+  // Helper for rendering Sub-Hub Bifurcation Sector Markers
   const createSectorBifurcationIcon = (sub: { sector: string; count: number; type: string }) => {
     const htmlStr = `
       <div style="
@@ -663,6 +671,14 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     }
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSelectedDistrict('ALL');
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([22.45, 71.85], 8, { duration: 1.2 });
+    }
+  };
+
   const totalStatewideCamerasCount = GUJARAT_33_DISTRICTS.reduce((sum, d) => sum + d.rawCount, 0).toLocaleString();
 
   return (
@@ -713,7 +729,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
           </h2>
           {selectedDistrict !== 'ALL' && (
             <button
-              onClick={() => { setSelectedDistrict('ALL'); setSearchQuery(''); mapInstanceRef.current?.flyTo([22.45, 71.85], 8); }}
+              onClick={handleClearSearch}
               className="text-xs font-bold text-[#0052CC] hover:underline flex items-center space-x-1 cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
@@ -760,7 +776,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
       </div>
 
       {/* District Camera Bifurcation Breakdown Drawer (Active when a district is selected, e.g. Kutch) */}
-      {activeDistrictObj && activeDistrictObj.subBifurcation && (
+      {activeDistrictObj && activeDistrictObj.subBifurcation && selectedDistrict !== 'ALL' && (
         <div className="bg-[#0B1E3B] text-white p-4 rounded-xl border border-blue-900 shadow-md space-y-3 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-blue-800/70 pb-2.5">
             <div className="flex items-center space-x-2">
@@ -769,9 +785,18 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
                 {activeDistrictObj.name} District — Camera Sector Bifurcation ({activeDistrictObj.camerasCount} Total Cameras)
               </h3>
             </div>
-            <span className="text-[11px] font-mono bg-blue-900/80 text-blue-200 px-2.5 py-0.5 rounded border border-blue-700 font-bold">
-              {activeDistrictObj.subBifurcation.length} Sub-Sectors Mapped
-            </span>
+            <div className="flex items-center space-x-3">
+              <span className="text-[11px] font-mono bg-blue-900/80 text-blue-200 px-2.5 py-0.5 rounded border border-blue-700 font-bold">
+                {activeDistrictObj.subBifurcation.length} Sub-Sectors Mapped
+              </span>
+              <button
+                onClick={handleClearSearch}
+                className="text-xs font-bold text-slate-300 hover:text-white bg-blue-950 px-2 py-0.5 rounded border border-blue-800 transition cursor-pointer flex items-center space-x-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Close Filter</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -806,7 +831,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
           
           {/* Map Controls Floating Overlay */}
           <div className="absolute top-3 left-3 z-[1000] flex flex-wrap items-center gap-2">
-            <div className="bg-white/95 backdrop-blur-xs p-1 rounded-lg border border-slate-200 shadow-md flex items-center space-x-2">
+            <div className="bg-white/95 backdrop-blur-xs p-1 rounded-lg border border-slate-200 shadow-md flex items-center space-x-2 relative">
               <Search className="w-3.5 h-3.5 text-slate-400 ml-2" />
               <input
                 type="text"
@@ -815,6 +840,15 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
                 placeholder="Search district, e.g. kutch..."
                 className="px-2 py-1 text-xs bg-transparent border-none focus:outline-hidden w-40 sm:w-52 font-medium"
               />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition mr-1"
+                  title="Clear Search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
             <select

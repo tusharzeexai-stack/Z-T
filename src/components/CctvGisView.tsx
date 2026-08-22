@@ -19,7 +19,9 @@ import {
   Globe,
   Camera as CameraIcon,
   Building2,
-  ShieldCheck
+  ShieldCheck,
+  PieChart,
+  Navigation
 } from 'lucide-react';
 
 interface CctvGisViewProps {
@@ -42,43 +44,237 @@ interface DistrictHubCard {
   lng: number;
   zoom: number;
   status: 'ONLINE' | 'DEGRADED' | 'OFFLINE';
+  subBifurcation: Array<{ sector: string; count: number; lat: number; lng: number; type: string }>;
 }
 
-// Complete 33 Districts of Gujarat Dataset
+// Complete 33 Districts of Gujarat with Sector Sub-Bifurcation
 const GUJARAT_33_DISTRICTS: DistrictHubCard[] = [
-  { name: 'Ahmedabad', districtKey: 'Ahmedabad', onlinePct: '100% ONLINE', camerasCount: '2,840', rawCount: 2840, hubName: 'Hub: Ahmedabad City Command', lat: 23.0225, lng: 72.5714, zoom: 12, status: 'ONLINE' },
-  { name: 'Surat', districtKey: 'Surat', onlinePct: '98.9% ONLINE', camerasCount: '2,150', rawCount: 2150, hubName: 'Hub: Surat Smart City CCC', lat: 21.1702, lng: 72.8311, zoom: 12, status: 'ONLINE' },
-  { name: 'Vadodara', districtKey: 'Vadodara', onlinePct: '99.2% ONLINE', camerasCount: '1,620', rawCount: 1620, hubName: 'Hub: Vadodara Urban CCC', lat: 22.3072, lng: 73.1812, zoom: 12, status: 'ONLINE' },
-  { name: 'Rajkot', districtKey: 'Rajkot', onlinePct: '97.5% ONLINE', camerasCount: '1,280', rawCount: 1280, hubName: 'Hub: Rajkot Range Police HQ', lat: 22.3039, lng: 70.8022, zoom: 12, status: 'ONLINE' },
-  { name: 'Gandhinagar', districtKey: 'Gandhinagar', onlinePct: '100% ONLINE', camerasCount: '950', rawCount: 950, hubName: 'Hub: State Command Center (HQ)', lat: 23.2156, lng: 72.6369, zoom: 12, status: 'ONLINE' },
-  { name: 'Bhavnagar', districtKey: 'Bhavnagar', onlinePct: '96.8% ONLINE', camerasCount: '740', rawCount: 740, hubName: 'Hub: Bhavnagar District Control', lat: 21.7645, lng: 72.1519, zoom: 12, status: 'ONLINE' },
-  { name: 'Jamnagar', districtKey: 'Jamnagar', onlinePct: '98.1% ONLINE', camerasCount: '620', rawCount: 620, hubName: 'Hub: Jamnagar Police HQ', lat: 22.4707, lng: 70.0577, zoom: 12, status: 'ONLINE' },
-  { name: 'Junagadh', districtKey: 'Junagadh', onlinePct: '97.0% ONLINE', camerasCount: '540', rawCount: 540, hubName: 'Hub: Junagadh Range CCC', lat: 21.5222, lng: 70.4579, zoom: 12, status: 'ONLINE' },
-  { name: 'Surendranagar', districtKey: 'Surendranagar', onlinePct: '99.0% ONLINE', camerasCount: '480', rawCount: 480, hubName: 'Hub: Surendranagar SP Office', lat: 22.7224, lng: 71.6370, zoom: 12, status: 'ONLINE' },
-  { name: 'Kutch (Bhuj)', districtKey: 'Kutch', onlinePct: '95.9% ONLINE', camerasCount: '690', rawCount: 690, hubName: 'Hub: Kutch Border Range CCC', lat: 23.2420, lng: 69.6669, zoom: 11, status: 'ONLINE' },
-  { name: 'Mehsana', districtKey: 'Mehsana', onlinePct: '98.4% ONLINE', camerasCount: '410', rawCount: 410, hubName: 'Hub: Mehsana District Control', lat: 23.5880, lng: 72.3693, zoom: 12, status: 'ONLINE' },
-  { name: 'Navsari', districtKey: 'Navsari', onlinePct: '380 CAMS', camerasCount: '380', rawCount: 380, hubName: 'Hub: Navsari Police Control', lat: 20.9467, lng: 72.9520, zoom: 12, status: 'ONLINE' },
-  { name: 'Anand', districtKey: 'Anand', onlinePct: '98.6% ONLINE', camerasCount: '520', rawCount: 520, hubName: 'Hub: Anand District Command', lat: 22.5645, lng: 72.9289, zoom: 12, status: 'ONLINE' },
-  { name: 'Bharuch', districtKey: 'Bharuch', onlinePct: '97.8% ONLINE', camerasCount: '610', rawCount: 610, hubName: 'Hub: Bharuch Industrial CCC', lat: 21.7051, lng: 72.9959, zoom: 12, status: 'ONLINE' },
-  { name: 'Banaskantha', districtKey: 'Banaskantha', onlinePct: '96.2% ONLINE', camerasCount: '490', rawCount: 490, hubName: 'Hub: Palanpur SP Office', lat: 24.1724, lng: 72.4382, zoom: 12, status: 'ONLINE' },
-  { name: 'Sabarkantha', districtKey: 'Sabarkantha', onlinePct: '97.4% ONLINE', camerasCount: '360', rawCount: 360, hubName: 'Hub: Himmatnagar Control', lat: 23.5979, lng: 72.9698, zoom: 12, status: 'ONLINE' },
-  { name: 'Patan', districtKey: 'Patan', onlinePct: '98.0% ONLINE', camerasCount: '320', rawCount: 320, hubName: 'Hub: Patan District Control', lat: 23.8493, lng: 72.1266, zoom: 12, status: 'ONLINE' },
-  { name: 'Amreli', districtKey: 'Amreli', onlinePct: '96.5% ONLINE', camerasCount: '290', rawCount: 290, hubName: 'Hub: Amreli SP Office', lat: 21.6032, lng: 71.2221, zoom: 12, status: 'ONLINE' },
-  { name: 'Porbandar', districtKey: 'Porbandar', onlinePct: '98.2% ONLINE', camerasCount: '310', rawCount: 310, hubName: 'Hub: Porbandar Coastal Command', lat: 21.6417, lng: 69.6293, zoom: 12, status: 'ONLINE' },
-  { name: 'Gir Somnath', districtKey: 'Gir Somnath', onlinePct: '97.9% ONLINE', camerasCount: '420', rawCount: 420, hubName: 'Hub: Veraval Coastal HQ', lat: 20.9042, lng: 70.3649, zoom: 12, status: 'ONLINE' },
-  { name: 'Botad', districtKey: 'Botad', onlinePct: '98.5% ONLINE', camerasCount: '230', rawCount: 230, hubName: 'Hub: Botad SP Office', lat: 22.1704, lng: 71.6687, zoom: 12, status: 'ONLINE' },
-  { name: 'Morbi', districtKey: 'Morbi', onlinePct: '97.1% ONLINE', camerasCount: '450', rawCount: 450, hubName: 'Hub: Morbi Ceramic Grid CCC', lat: 22.8173, lng: 70.8370, zoom: 12, status: 'ONLINE' },
-  { name: 'Devbhumi Dwarka', districtKey: 'Devbhumi Dwarka', onlinePct: '98.8% ONLINE', camerasCount: '280', rawCount: 280, hubName: 'Hub: Dwarka Pilgrim Security', lat: 22.2394, lng: 68.9678, zoom: 12, status: 'ONLINE' },
-  { name: 'Panchmahal', districtKey: 'Panchmahal', onlinePct: '96.9% ONLINE', camerasCount: '340', rawCount: 340, hubName: 'Hub: Godhra Control Room', lat: 22.7780, lng: 73.6143, zoom: 12, status: 'ONLINE' },
-  { name: 'Dahod', districtKey: 'Dahod', onlinePct: '95.8% ONLINE', camerasCount: '310', rawCount: 310, hubName: 'Hub: Dahod Tribal Border HQ', lat: 22.8347, lng: 74.2565, zoom: 12, status: 'ONLINE' },
-  { name: 'Mahisagar', districtKey: 'Mahisagar', onlinePct: '97.2% ONLINE', camerasCount: '250', rawCount: 250, hubName: 'Hub: Lunawada Control', lat: 23.1319, lng: 73.6143, zoom: 12, status: 'ONLINE' },
-  { name: 'Chhota Udepur', districtKey: 'Chhota Udepur', onlinePct: '96.0% ONLINE', camerasCount: '210', rawCount: 210, hubName: 'Hub: Chhota Udepur SP Office', lat: 22.3080, lng: 74.0150, zoom: 12, status: 'ONLINE' },
-  { name: 'Narmada', districtKey: 'Narmada', onlinePct: '99.4% ONLINE', camerasCount: '260', rawCount: 260, hubName: 'Hub: Rajpipla SOU CCC', lat: 21.8704, lng: 73.5026, zoom: 12, status: 'ONLINE' },
-  { name: 'Tapi', districtKey: 'Tapi', onlinePct: '96.6% ONLINE', camerasCount: '240', rawCount: 240, hubName: 'Hub: Vyara SP Office', lat: 21.1147, lng: 73.3934, zoom: 12, status: 'ONLINE' },
-  { name: 'Dang', districtKey: 'Dang', onlinePct: '95.2% ONLINE', camerasCount: '180', rawCount: 180, hubName: 'Hub: Ahwa Forest Post', lat: 20.7534, lng: 73.6853, zoom: 12, status: 'DEGRADED' },
-  { name: 'Valsad', districtKey: 'Valsad', onlinePct: '98.7% ONLINE', camerasCount: '390', rawCount: 390, hubName: 'Hub: Valsad Coastal Control', lat: 20.5992, lng: 72.9342, zoom: 12, status: 'ONLINE' },
-  { name: 'Aravalli', districtKey: 'Aravalli', onlinePct: '97.3% ONLINE', camerasCount: '220', rawCount: 220, hubName: 'Hub: Modasa Control Room', lat: 23.4647, lng: 73.3005, zoom: 12, status: 'ONLINE' },
-  { name: 'Kheda', districtKey: 'Kheda', onlinePct: '98.3% ONLINE', camerasCount: '430', rawCount: 430, hubName: 'Hub: Nadiad SP Office', lat: 22.6916, lng: 72.8634, zoom: 12, status: 'ONLINE' },
+  {
+    name: 'Kutch (Bhuj)',
+    districtKey: 'Kutch',
+    onlinePct: '95.9% ONLINE',
+    camerasCount: '690',
+    rawCount: 690,
+    hubName: 'Hub: Kutch Border Range CCC',
+    lat: 23.2420,
+    lng: 69.6669,
+    zoom: 10,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Bhuj City Central Command', count: 240, lat: 23.2420, lng: 69.6669, type: 'Urban Command' },
+      { sector: 'Kandla Port & Marine Sector', count: 140, lat: 23.0006, lng: 70.2185, type: 'Port Security' },
+      { sector: 'Mundra Port Industrial Complex', count: 120, lat: 22.8394, lng: 69.7042, type: 'Industrial' },
+      { sector: 'Gandhidham Transit Junction', count: 80, lat: 23.0753, lng: 70.1337, type: 'Highway Transit' },
+      { sector: 'Anjar Expressway Corridor', count: 50, lat: 23.1136, lng: 70.0269, type: 'Highway ANPR' },
+      { sector: 'Rapar Border Checkpoint', count: 35, lat: 23.5700, lng: 70.6400, type: 'Border Post' },
+      { sector: 'Naliya Coastal Outpost', count: 25, lat: 23.2620, lng: 68.8310, type: 'Coastal Surveillance' }
+    ]
+  },
+  {
+    name: 'Ahmedabad',
+    districtKey: 'Ahmedabad',
+    onlinePct: '100% ONLINE',
+    camerasCount: '2,840',
+    rawCount: 2840,
+    hubName: 'Hub: Ahmedabad City Command',
+    lat: 23.0225,
+    lng: 72.5714,
+    zoom: 11,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'SG Highway & Iscon Command', count: 980, lat: 23.0280, lng: 72.5074, type: 'AI Traffic Grid' },
+      { sector: 'Maninagar East Sector', count: 620, lat: 22.9972, lng: 72.6012, type: 'Urban Surveillance' },
+      { sector: 'Naroda Industrial Corridor', count: 450, lat: 23.0762, lng: 72.6598, type: 'Industrial Security' },
+      { sector: 'Satellite & Vastrapur Zone', count: 490, lat: 23.0375, lng: 72.5280, type: 'High Density' },
+      { sector: 'SP Ring Road Toll Gates', count: 300, lat: 23.1105, lng: 72.5401, type: 'Perimeter Check' }
+    ]
+  },
+  {
+    name: 'Surat',
+    districtKey: 'Surat',
+    onlinePct: '98.9% ONLINE',
+    camerasCount: '2,150',
+    rawCount: 2150,
+    hubName: 'Hub: Surat Smart City CCC',
+    lat: 21.1702,
+    lng: 72.8311,
+    zoom: 11,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Ring Road & Textile Market Zone', count: 820, lat: 21.1890, lng: 72.8420, type: 'Commercial Grid' },
+      { sector: 'Hazira Port Industrial Complex', count: 540, lat: 21.1167, lng: 72.6500, type: 'Marine & Heavy Industry' },
+      { sector: 'Adajan & Rander Bridge Corridor', count: 460, lat: 21.2050, lng: 72.7950, type: 'River Transit' },
+      { sector: 'Udhna Junction ANPR Posts', count: 330, lat: 21.1520, lng: 72.8490, type: 'Highway Gate' }
+    ]
+  },
+  {
+    name: 'Vadodara',
+    districtKey: 'Vadodara',
+    onlinePct: '99.2% ONLINE',
+    camerasCount: '1,620',
+    rawCount: 1620,
+    hubName: 'Hub: Vadodara Urban CCC',
+    lat: 22.3072,
+    lng: 73.1812,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Alkapuri Central Command', count: 680, lat: 22.3100, lng: 73.1700, type: 'Urban Command' },
+      { sector: 'Makarpura GIDC Sector', count: 490, lat: 22.2400, lng: 73.1900, type: 'Industrial GIDC' },
+      { sector: 'Expressway Toll Checkpoint', count: 450, lat: 22.3500, lng: 73.2200, type: 'Highway Toll' }
+    ]
+  },
+  {
+    name: 'Rajkot',
+    districtKey: 'Rajkot',
+    onlinePct: '97.5% ONLINE',
+    camerasCount: '1,280',
+    rawCount: 1280,
+    hubName: 'Hub: Rajkot Range Police HQ',
+    lat: 22.3039,
+    lng: 70.8022,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Race Course Central Circle', count: 560, lat: 22.3000, lng: 70.7900, type: 'City Core' },
+      { sector: 'Metoda GIDC Industrial Post', count: 420, lat: 22.2500, lng: 70.6900, type: 'Manufacturing' },
+      { sector: 'Bhakti Nagar Transit Hub', count: 300, lat: 22.2800, lng: 70.8100, type: 'Rail Transit' }
+    ]
+  },
+  {
+    name: 'Gandhinagar',
+    districtKey: 'Gandhinagar',
+    onlinePct: '100% ONLINE',
+    camerasCount: '950',
+    rawCount: 950,
+    hubName: 'Hub: State Command Center (HQ)',
+    lat: 23.2156,
+    lng: 72.6369,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Sachivalaya & Secretariat VIP Grid', count: 450, lat: 23.2200, lng: 72.6500, type: 'High Security VIP' },
+      { sector: 'GIFT City Financial Tower Grid', count: 320, lat: 23.1600, lng: 72.6800, type: 'Smart Financial City' },
+      { sector: 'Chiloda Toll Highway Post', count: 180, lat: 23.2800, lng: 72.6900, type: 'State Highway Gate' }
+    ]
+  },
+  {
+    name: 'Bhavnagar',
+    districtKey: 'Bhavnagar',
+    onlinePct: '96.8% ONLINE',
+    camerasCount: '740',
+    rawCount: 740,
+    hubName: 'Hub: Bhavnagar District Control',
+    lat: 21.7645,
+    lng: 72.1519,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Alang Ship Recycling Yard', count: 380, lat: 21.4100, lng: 72.1800, type: 'Coastal Maritime' },
+      { sector: 'Bhavnagar City Command', count: 360, lat: 21.7600, lng: 72.1500, type: 'Urban Command' }
+    ]
+  },
+  {
+    name: 'Jamnagar',
+    districtKey: 'Jamnagar',
+    onlinePct: '98.1% ONLINE',
+    camerasCount: '620',
+    rawCount: 620,
+    hubName: 'Hub: Jamnagar Police HQ',
+    lat: 22.4707,
+    lng: 70.0577,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Moti Khavdi Refinery Complex', count: 350, lat: 22.4200, lng: 69.8500, type: 'Energy Refinery' },
+      { sector: 'Jamnagar Municipal Grid', count: 270, lat: 22.4700, lng: 70.0500, type: 'Urban Grid' }
+    ]
+  },
+  {
+    name: 'Junagadh',
+    districtKey: 'Junagadh',
+    onlinePct: '97.0% ONLINE',
+    camerasCount: '540',
+    rawCount: 540,
+    hubName: 'Hub: Junagadh Range CCC',
+    lat: 21.5222,
+    lng: 70.4579,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Girnar Ropeway & Temple Grid', count: 280, lat: 21.5300, lng: 70.5000, type: 'Pilgrim Security' },
+      { sector: 'Timbavadi Gate Checkpoint', count: 260, lat: 21.5200, lng: 70.4400, type: 'Transit Gate' }
+    ]
+  },
+  {
+    name: 'Surendranagar',
+    districtKey: 'Surendranagar',
+    onlinePct: '99.0% ONLINE',
+    camerasCount: '480',
+    rawCount: 480,
+    hubName: 'Hub: Surendranagar SP Office',
+    lat: 22.7224,
+    lng: 71.6370,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Wadhwan Industrial Corridor', count: 280, lat: 22.7000, lng: 71.6700, type: 'Industrial GIDC' },
+      { sector: 'Surendranagar SP Command', count: 200, lat: 22.7200, lng: 71.6300, type: 'Urban Command' }
+    ]
+  },
+  {
+    name: 'Mehsana',
+    districtKey: 'Mehsana',
+    onlinePct: '98.4% ONLINE',
+    camerasCount: '410',
+    rawCount: 410,
+    hubName: 'Hub: Mehsana District Control',
+    lat: 23.5880,
+    lng: 72.3693,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Modhera Road Junction', count: 230, lat: 23.5900, lng: 72.3600, type: 'Highway ANPR' },
+      { sector: 'Mehsana GIDC Sector', count: 180, lat: 23.5600, lng: 72.3800, type: 'Industrial' }
+    ]
+  },
+  {
+    name: 'Navsari',
+    districtKey: 'Navsari',
+    onlinePct: '99.1% ONLINE',
+    camerasCount: '380',
+    rawCount: 380,
+    hubName: 'Hub: Navsari Police Control',
+    lat: 20.9467,
+    lng: 72.9520,
+    zoom: 12,
+    status: 'ONLINE',
+    subBifurcation: [
+      { sector: 'Bilimora Coastal Harbor', count: 210, lat: 20.7600, lng: 72.9500, type: 'Coastal Security' },
+      { sector: 'Navsari City Grid', count: 170, lat: 20.9500, lng: 72.9300, type: 'Urban Command' }
+    ]
+  },
+  { name: 'Anand', districtKey: 'Anand', onlinePct: '98.6% ONLINE', camerasCount: '520', rawCount: 520, hubName: 'Hub: Anand District Command', lat: 22.5645, lng: 72.9289, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Amul Dairy Sector', count: 320, lat: 22.5600, lng: 72.9200, type: 'Industrial' }, { sector: 'Anand Highway Gate', count: 200, lat: 22.5800, lng: 72.9400, type: 'ANPR' }] },
+  { name: 'Bharuch', districtKey: 'Bharuch', onlinePct: '97.8% ONLINE', camerasCount: '610', rawCount: 610, hubName: 'Hub: Bharuch Industrial CCC', lat: 21.7051, lng: 72.9959, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Ankleshwar GIDC Grid', count: 380, lat: 21.6200, lng: 73.0000, type: 'Chemical GIDC' }, { sector: 'Narmada Bridge Checkpoint', count: 230, lat: 21.7100, lng: 72.9800, type: 'Bridge ANPR' }] },
+  { name: 'Banaskantha', districtKey: 'Banaskantha', onlinePct: '96.2% ONLINE', camerasCount: '490', rawCount: 490, hubName: 'Hub: Palanpur SP Office', lat: 24.1724, lng: 72.4382, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Palanpur North Bypass', count: 290, lat: 24.1800, lng: 72.4400, type: 'Border Highway' }, { sector: 'Deesa Market Post', count: 200, lat: 24.2500, lng: 72.1800, type: 'Urban Post' }] },
+  { name: 'Sabarkantha', districtKey: 'Sabarkantha', onlinePct: '97.4% ONLINE', camerasCount: '360', rawCount: 360, hubName: 'Hub: Himmatnagar Control', lat: 23.5979, lng: 72.9698, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Himmatnagar NH-8 Grid', count: 220, lat: 23.6000, lng: 72.9700, type: 'National Highway' }, { sector: 'Idar Fort Checkpoint', count: 140, lat: 23.8300, lng: 73.0000, type: 'Heritage Security' }] },
+  { name: 'Patan', districtKey: 'Patan', onlinePct: '98.0% ONLINE', camerasCount: '320', rawCount: 320, hubName: 'Hub: Patan District Control', lat: 23.8493, lng: 72.1266, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Rani ki Vav Heritage Grid', count: 180, lat: 23.8500, lng: 72.1100, type: 'Heritage Tourism' }, { sector: 'Patan Cross Road ANPR', count: 140, lat: 23.8400, lng: 72.1300, type: 'Traffic ANPR' }] },
+  { name: 'Amreli', districtKey: 'Amreli', onlinePct: '96.5% ONLINE', camerasCount: '290', rawCount: 290, hubName: 'Hub: Amreli SP Office', lat: 21.6032, lng: 71.2221, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Amreli Central Station', count: 170, lat: 21.6000, lng: 71.2200, type: 'Station Command' }, { sector: 'Pipavav Port Gate', count: 120, lat: 20.9100, lng: 71.5000, type: 'Marine Port' }] },
+  { name: 'Porbandar', districtKey: 'Porbandar', onlinePct: '98.2% ONLINE', camerasCount: '310', rawCount: 310, hubName: 'Hub: Porbandar Coastal Command', lat: 21.6417, lng: 69.6293, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Coast Guard Jetee Gate', count: 190, lat: 21.6300, lng: 69.6100, type: 'Coast Guard' }, { sector: 'Kirti Mandir Zone', count: 120, lat: 21.6400, lng: 69.6300, type: 'Urban Zone' }] },
+  { name: 'Gir Somnath', districtKey: 'Gir Somnath', onlinePct: '97.9% ONLINE', camerasCount: '420', rawCount: 420, hubName: 'Hub: Veraval Coastal HQ', lat: 20.9042, lng: 70.3649, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Somnath Temple Security Grid', count: 260, lat: 20.8880, lng: 70.4010, type: 'Pilgrim VIP' }, { sector: 'Veraval Fishing Harbor', count: 160, lat: 20.9000, lng: 70.3600, type: 'Marine Harbor' }] },
+  { name: 'Botad', districtKey: 'Botad', onlinePct: '98.5% ONLINE', camerasCount: '230', rawCount: 230, hubName: 'Hub: Botad SP Office', lat: 22.1704, lng: 71.6687, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Salangpur Temple Corridor', count: 140, lat: 22.1400, lng: 71.7700, type: 'Pilgrim Grid' }, { sector: 'Botad Town Circle', count: 90, lat: 22.1700, lng: 71.6600, type: 'Town Circle' }] },
+  { name: 'Morbi', districtKey: 'Morbi', onlinePct: '97.1% ONLINE', camerasCount: '450', rawCount: 450, hubName: 'Hub: Morbi Ceramic Grid CCC', lat: 22.8173, lng: 70.8370, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Ceramic Industrial Zone', count: 280, lat: 22.8200, lng: 70.8500, type: 'Industrial GIDC' }, { sector: 'Morbi Bypass Bridge', count: 170, lat: 22.8000, lng: 70.8200, type: 'Bridge ANPR' }] },
+  { name: 'Devbhumi Dwarka', districtKey: 'Devbhumi Dwarka', onlinePct: '98.8% ONLINE', camerasCount: '280', rawCount: 280, hubName: 'Hub: Dwarka Pilgrim Security', lat: 22.2394, lng: 68.9678, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Dwarkadhish Temple Security', count: 180, lat: 22.2380, lng: 68.9680, type: 'Pilgrim Command' }, { sector: 'Okha Jetty Marine Gate', count: 100, lat: 22.4600, lng: 69.0700, type: 'Marine Gate' }] },
+  { name: 'Panchmahal', districtKey: 'Panchmahal', onlinePct: '96.9% ONLINE', camerasCount: '340', rawCount: 340, hubName: 'Hub: Godhra Control Room', lat: 22.7780, lng: 73.6143, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Godhra Junction Checkpoint', count: 200, lat: 22.7800, lng: 73.6100, type: 'Junction Post' }, { sector: 'Champaner Heritage Gate', count: 140, lat: 22.4800, lng: 73.5300, type: 'UNESCO Gate' }] },
+  { name: 'Dahod', districtKey: 'Dahod', onlinePct: '95.8% ONLINE', camerasCount: '310', rawCount: 310, hubName: 'Hub: Dahod Tribal Border HQ', lat: 22.8347, lng: 74.2565, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'MP Interstate Border Gate', count: 190, lat: 22.8400, lng: 74.3000, type: 'Interstate Border' }, { sector: 'Dahod City Station', count: 120, lat: 22.8300, lng: 74.2500, type: 'Station Grid' }] },
+  { name: 'Mahisagar', districtKey: 'Mahisagar', onlinePct: '97.2% ONLINE', camerasCount: '250', rawCount: 250, hubName: 'Hub: Lunawada Control', lat: 23.1319, lng: 73.6143, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Lunawada Town Circle', count: 150, lat: 23.1300, lng: 73.6100, type: 'Town Circle' }, { sector: 'Kadana Dam Perimeter', count: 100, lat: 23.3000, lng: 73.8300, type: 'Dam Perimeter' }] },
+  { name: 'Chhota Udepur', districtKey: 'Chhota Udepur', onlinePct: '96.0% ONLINE', camerasCount: '210', rawCount: 210, hubName: 'Hub: Chhota Udepur SP Office', lat: 22.3080, lng: 74.0150, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Bodeli Market Corridor', count: 130, lat: 22.2600, lng: 73.7200, type: 'Market Corridor' }, { sector: 'Interstate Border Post', count: 80, lat: 22.3100, lng: 74.0500, type: 'Border Checkpoint' }] },
+  { name: 'Narmada', districtKey: 'Narmada', onlinePct: '99.4% ONLINE', camerasCount: '260', rawCount: 260, hubName: 'Hub: Rajpipla SOU CCC', lat: 21.8704, lng: 73.5026, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Statue of Unity VIP Campus', count: 180, lat: 21.8380, lng: 73.7190, type: 'VIP Tourism' }, { sector: 'Rajpipla Town Control', count: 80, lat: 21.8700, lng: 73.5000, type: 'Town Control' }] },
+  { name: 'Tapi', districtKey: 'Tapi', onlinePct: '96.6% ONLINE', camerasCount: '240', rawCount: 240, hubName: 'Hub: Vyara SP Office', lat: 21.1147, lng: 73.3934, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Songadh Highway Border Post', count: 150, lat: 21.1600, lng: 73.6000, type: 'Highway Border' }, { sector: 'Vyara Municipal Circle', count: 90, lat: 21.1100, lng: 73.3900, type: 'Urban Circle' }] },
+  { name: 'Dang', districtKey: 'Dang', onlinePct: '95.2% ONLINE', camerasCount: '180', rawCount: 180, hubName: 'Hub: Ahwa Forest Post', lat: 20.7534, lng: 73.6853, zoom: 12, status: 'DEGRADED', subBifurcation: [{ sector: 'Saputara Hill Station Gate', count: 110, lat: 20.5800, lng: 73.7500, type: 'Hill Station' }, { sector: 'Ahwa Headquarters Corridor', count: 70, lat: 20.7500, lng: 73.6800, type: 'Forest Command' }] },
+  { name: 'Valsad', districtKey: 'Valsad', onlinePct: '98.7% ONLINE', camerasCount: '390', rawCount: 390, hubName: 'Hub: Valsad Coastal Control', lat: 20.5992, lng: 72.9342, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Vapi Industrial GIDC', count: 240, lat: 20.3700, lng: 72.9000, type: 'Heavy GIDC' }, { sector: 'Valsad Highway Toll', count: 150, lat: 20.6000, lng: 72.9300, type: 'Toll Checkpoint' }] },
+  { name: 'Aravalli', districtKey: 'Aravalli', onlinePct: '97.3% ONLINE', camerasCount: '220', rawCount: 220, hubName: 'Hub: Modasa Control Room', lat: 23.4647, lng: 73.3005, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Shamlaji Border Checkpoint', count: 140, lat: 23.6800, lng: 73.4300, type: 'Pilgrim Border' }, { sector: 'Modasa Town Grid', count: 80, lat: 23.4600, lng: 73.3000, type: 'Town Grid' }] },
+  { name: 'Kheda', districtKey: 'Kheda', onlinePct: '98.3% ONLINE', camerasCount: '430', rawCount: 430, hubName: 'Hub: Nadiad SP Office', lat: 22.6916, lng: 72.8634, zoom: 12, status: 'ONLINE', subBifurcation: [{ sector: 'Nadiad National Highway Grid', count: 260, lat: 22.6900, lng: 72.8600, type: 'NH-8 Grid' }, { sector: 'Dakora Temple Security', count: 170, lat: 22.7500, lng: 73.1500, type: 'Pilgrim Security' }] },
 ];
 
 // Basemap Provider URLs
@@ -126,7 +322,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState(selectedDeptFilter);
   const [selectedDistrict, setSelectedDistrict] = useState(selectedDistrictFilter);
-  const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [selectedStatus, setSelectedStatus] = useState(selectedStatusFilter || 'ALL');
   const [activeTileLayerKey, setActiveTileLayerKey] = useState<keyof typeof TILE_LAYERS>('googleHybrid');
   const [isLayerDrawerOpen, setIsLayerDrawerOpen] = useState(false);
 
@@ -134,6 +330,25 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
+
+  // Dynamic search navigation effect for instant flyTo on search query
+  useEffect(() => {
+    if (!searchQuery.trim() || !mapInstanceRef.current) return;
+    const q = searchQuery.toLowerCase().trim();
+
+    const matchedDist = GUJARAT_33_DISTRICTS.find(d => 
+      d.name.toLowerCase().includes(q) || 
+      d.districtKey.toLowerCase().includes(q)
+    );
+
+    if (matchedDist) {
+      setSelectedDistrict(matchedDist.districtKey);
+      mapInstanceRef.current.flyTo([matchedDist.lat, matchedDist.lng], matchedDist.zoom, { duration: 1.2 });
+    }
+  }, [searchQuery]);
+
+  // Active district selected object
+  const activeDistrictObj = GUJARAT_33_DISTRICTS.find(d => d.districtKey === selectedDistrict);
 
   // Filtered cameras dataset
   const activeCameras = React.useMemo(() => {
@@ -155,12 +370,11 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     });
   }, [cameras, selectedDept, selectedDistrict, selectedStatus, searchQuery]);
 
-  // Helper for rendering dynamic District Camera Count Pill Markers on Map
+  // Helper for rendering dynamic District Main Pill Marker
   const createDistrictPillIcon = (dist: DistrictHubCard, isSelected: boolean) => {
     const colorHex = dist.status === 'ONLINE' ? '#10B981' : dist.status === 'DEGRADED' ? '#F59E0B' : '#EF4444';
-    const border = isSelected ? '2px solid #0052CC' : '1.5px solid rgba(255,255,255,0.9)';
-    const bg = isSelected ? '#0052CC' : 'rgba(15, 23, 42, 0.92)';
-    const textColor = '#FFFFFF';
+    const border = isSelected ? '2.5px solid #0052CC' : '1.5px solid rgba(255,255,255,0.9)';
+    const bg = isSelected ? '#0052CC' : 'rgba(15, 23, 42, 0.94)';
 
     const htmlStr = `
       <div style="
@@ -168,11 +382,11 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
         align-items: center;
         gap: 5px;
         background: ${bg};
-        color: ${textColor};
-        padding: 3px 8px;
+        color: #FFFFFF;
+        padding: 4px 9px;
         border-radius: 9999px;
         border: ${border};
-        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.45);
         font-family: 'Plus Jakarta Sans', Inter, sans-serif;
         white-space: nowrap;
         cursor: pointer;
@@ -180,15 +394,45 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
       ">
         <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorHex}; display: inline-block;"></span>
         <span style="font-weight: 800; font-size: 11px; tracking: -0.01em;">${dist.name}</span>
-        <span style="background: rgba(255,255,255,0.2); font-weight: 800; font-size: 10px; padding: 1px 5px; border-radius: 4px; font-family: monospace;">${dist.camerasCount} Cams</span>
+        <span style="background: rgba(255,255,255,0.22); font-weight: 800; font-size: 10px; padding: 1px 6px; border-radius: 4px; font-family: monospace;">${dist.camerasCount} Cams</span>
       </div>
     `;
 
     return L.divIcon({
       html: htmlStr,
       className: 'custom-district-pill-marker',
-      iconSize: [120, 26],
-      iconAnchor: [60, 13],
+      iconSize: [130, 28],
+      iconAnchor: [65, 14],
+    });
+  };
+
+  // Helper for rendering Sub-Hub Bifurcation Sector Markers (e.g., Bhuj City, Kandla Port, Mundra Port)
+  const createSectorBifurcationIcon = (sub: { sector: string; count: number; type: string }) => {
+    const htmlStr = `
+      <div style="
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(0, 82, 204, 0.92);
+        color: #FFFFFF;
+        padding: 3px 7px;
+        border-radius: 6px;
+        border: 1.5px solid #60A5FA;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+        font-family: 'Plus Jakarta Sans', Inter, sans-serif;
+        white-space: nowrap;
+        cursor: pointer;
+      ">
+        <span style="font-weight: 700; font-size: 10px; color: #E0F2FE;">📍 ${sub.sector}</span>
+        <span style="background: #1E40AF; font-weight: 900; font-size: 9.5px; padding: 1px 4px; border-radius: 3px; font-family: monospace; color: #60A5FA;">${sub.count} Cams</span>
+      </div>
+    `;
+
+    return L.divIcon({
+      html: htmlStr,
+      className: 'custom-subsector-pill-marker',
+      iconSize: [140, 24],
+      iconAnchor: [70, 12],
     });
   };
 
@@ -276,7 +520,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     tileLayerRef.current = newLayer;
   }, [activeTileLayerKey]);
 
-  // Render Map Markers (both 33 District Hub Count Markers & Camera Node Markers)
+  // Render Map Markers (District Hub Markers + Sub-Hub Bifurcations + Camera Node Markers)
   useEffect(() => {
     if (!mapInstanceRef.current || !markersGroupRef.current) return;
 
@@ -284,9 +528,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
       if (!mapInstanceRef.current || !markersGroupRef.current) return;
       markersGroupRef.current.clearLayers();
 
-      const currentZoom = mapInstanceRef.current.getZoom();
-
-      // Render 33 District Camera Count Pill Markers across all Gujarat
+      // Render 33 District Main Pill Markers
       GUJARAT_33_DISTRICTS.forEach(dist => {
         if (selectedDistrict !== 'ALL' && dist.districtKey !== selectedDistrict) return;
 
@@ -312,13 +554,42 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
         marker.on('mouseout', () => marker.closePopup());
         marker.on('click', () => {
           setSelectedDistrict(dist.districtKey);
-          mapInstanceRef.current?.flyTo([dist.lat, dist.lng], 12, { duration: 1.2 });
+          mapInstanceRef.current?.flyTo([dist.lat, dist.lng], dist.zoom, { duration: 1.2 });
         });
 
         markersGroupRef.current?.addLayer(marker);
+
+        // If this district is selected OR single district filter active, render all Sector Sub-Bifurcation markers!
+        if (selectedDistrict === dist.districtKey && dist.subBifurcation) {
+          dist.subBifurcation.forEach(sub => {
+            const subIcon = createSectorBifurcationIcon(sub);
+            const subMarker = L.marker([sub.lat, sub.lng], { icon: subIcon });
+
+            const subPopupContent = `
+              <div style="font-family:'Plus Jakarta Sans',Inter,sans-serif;font-size:12px;padding:4px 2px;min-width:210px;">
+                <div style="font-weight:800;color:#0052CC;font-size:12.5px;">📍 ${sub.sector}</div>
+                <div style="color:#64748B;font-size:10px;font-weight:600;margin-top:1px;">Category: ${sub.type} (${dist.name})</div>
+                <hr style="border:none;border-top:1px solid #E2E8F0;margin:5px 0;"/>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="color:#334155;font-weight:600;">Sector Camera Count:</span>
+                  <strong style="color:#0052CC;font-size:12px;font-family:monospace;">${sub.count} Cameras</strong>
+                </div>
+              </div>
+            `;
+
+            subMarker.bindPopup(L.popup({ closeButton: false, offset: [0, -10] }).setContent(subPopupContent));
+            subMarker.on('mouseover', () => subMarker.openPopup());
+            subMarker.on('mouseout', () => subMarker.closePopup());
+            subMarker.on('click', () => {
+              mapInstanceRef.current?.flyTo([sub.lat, sub.lng], 13, { duration: 1.0 });
+            });
+
+            markersGroupRef.current?.addLayer(subMarker);
+          });
+        }
       });
 
-      // Also render granular camera nodes when zoomed in or filtered
+      // Also render granular individual camera node markers
       const bounds = mapInstanceRef.current.getBounds();
       const visibleCameras = activeCameras.filter(cam =>
         bounds.contains([cam.latitude, cam.longitude])
@@ -390,7 +661,6 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     }
   };
 
-  // Total active camera count across all 33 districts
   const totalStatewideCamerasCount = GUJARAT_33_DISTRICTS.reduce((sum, d) => sum + d.rawCount, 0).toLocaleString();
 
   return (
@@ -441,8 +711,8 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
           </h2>
           {selectedDistrict !== 'ALL' && (
             <button
-              onClick={() => { setSelectedDistrict('ALL'); mapInstanceRef.current?.flyTo([22.45, 71.85], 8); }}
-              className="text-xs font-bold text-[#0052CC] hover:underline flex items-center space-x-1"
+              onClick={() => { setSelectedDistrict('ALL'); setSearchQuery(''); mapInstanceRef.current?.flyTo([22.45, 71.85], 8); }}
+              className="text-xs font-bold text-[#0052CC] hover:underline flex items-center space-x-1 cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Show All 33 Districts</span>
@@ -487,6 +757,45 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
         </div>
       </div>
 
+      {/* District Camera Bifurcation Breakdown Drawer (Active when a district is selected, e.g. Kutch) */}
+      {activeDistrictObj && activeDistrictObj.subBifurcation && (
+        <div className="bg-[#0B1E3B] text-white p-4 rounded-xl border border-blue-900 shadow-md space-y-3 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-blue-800/70 pb-2.5">
+            <div className="flex items-center space-x-2">
+              <PieChart className="w-4 h-4 text-blue-400" />
+              <h3 className="text-sm font-extrabold tracking-tight">
+                {activeDistrictObj.name} District — Camera Sector Bifurcation ({activeDistrictObj.camerasCount} Total Cameras)
+              </h3>
+            </div>
+            <span className="text-[11px] font-mono bg-blue-900/80 text-blue-200 px-2.5 py-0.5 rounded border border-blue-700 font-bold">
+              {activeDistrictObj.subBifurcation.length} Sub-Sectors Mapped
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {activeDistrictObj.subBifurcation.map(sub => (
+              <div
+                key={sub.sector}
+                onClick={() => mapInstanceRef.current?.flyTo([sub.lat, sub.lng], 13, { duration: 1.0 })}
+                className="bg-[#122A4E] hover:bg-[#1A3865] p-3 rounded-lg border border-blue-800/80 transition cursor-pointer flex flex-col justify-between group shadow-xs"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold text-blue-300 uppercase tracking-wider">{sub.type}</span>
+                    <Navigation className="w-3 h-3 text-blue-400 group-hover:text-white transition" />
+                  </div>
+                  <h4 className="text-xs font-bold text-white mt-1 group-hover:text-blue-200 transition">{sub.sector}</h4>
+                </div>
+                <div className="mt-3 flex items-baseline justify-between border-t border-blue-900/60 pt-2">
+                  <span className="text-[10.5px] text-slate-300">Camera Deployment:</span>
+                  <span className="text-sm font-black font-mono text-emerald-400">{sub.count} Cams</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Interactive Leaflet Map & Inspector Viewport */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
@@ -501,8 +810,8 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search node or location..."
-                className="px-2 py-1 text-xs bg-transparent border-none focus:outline-hidden w-36 sm:w-44"
+                placeholder="Search district, e.g. kutch..."
+                className="px-2 py-1 text-xs bg-transparent border-none focus:outline-hidden w-40 sm:w-52 font-medium"
               />
             </div>
 
@@ -593,7 +902,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
             <span>•</span>
             <span className="font-bold text-[#0052CC]">{TILE_LAYERS[activeTileLayerKey].name}</span>
             <span>•</span>
-            <span className="font-bold text-emerald-700">All 33 Districts Rendered</span>
+            <span className="font-bold text-emerald-700">All 33 Districts Bifurcated</span>
           </div>
 
         </div>

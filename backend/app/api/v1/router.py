@@ -12,6 +12,7 @@ from app.api.v1.federation import router as federation_router
 from app.api.v1.events import router as events_router
 from app.api.v1.audit import router as audit_router
 from app.api.v1.health import router as health_router
+from app.api.v1.evidence import router as evidence_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -28,3 +29,4 @@ api_v1_router.include_router(federation_router)
 api_v1_router.include_router(events_router)
 api_v1_router.include_router(audit_router)
 api_v1_router.include_router(health_router)
+api_v1_router.include_router(evidence_router)

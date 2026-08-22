@@ -16,16 +16,24 @@ class Settings:
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
-    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
+    # AWS RDS PostgreSQL Settings
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "z-tracs-gj.c5u8ogweeig9.ap-south-1.rds.amazonaws.com")
     POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgresgjtracs")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "PostgresGjtracs")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "ztracs")
     
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
         f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
     )
+
+    # AWS S3 Evidence Vault Settings
+    AWS_REGION: str = os.getenv("AWS_REGION", "ap-south-1")
+    AWS_S3_BUCKET_NAME: str = os.getenv("AWS_S3_BUCKET_NAME", "ztracs-evidence-vault-dev")
+    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     KAFKA_BROKERS: list = os.getenv("KAFKA_BROKERS", "kafka1.sdc.gujarat.gov.in:9092").split(",")
     

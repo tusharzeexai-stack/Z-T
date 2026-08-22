@@ -16,7 +16,9 @@ import {
   Eye,
   RotateCcw,
   SlidersHorizontal,
-  Globe
+  Globe,
+  Camera as CameraIcon,
+  Building2
 } from 'lucide-react';
 
 interface CctvGisViewProps {
@@ -28,7 +30,34 @@ interface CctvGisViewProps {
   selectedDeptFilter?: string;
 }
 
-// Basemap Provider URLs (Google Maps Satellite, Google Hybrid, Esri, CartoDB, OSM)
+interface DistrictHubCard {
+  name: string;
+  districtKey: string;
+  onlinePct: string;
+  camerasCount: string;
+  hubName: string;
+  lat: number;
+  lng: number;
+  zoom: number;
+}
+
+// 12 District Command Hub Cards Dataset
+const DISTRICT_HUB_CARDS: DistrictHubCard[] = [
+  { name: 'Ahmedabad', districtKey: 'Ahmedabad', onlinePct: '100% ONLINE', camerasCount: '2,840', hubName: 'Hub: Ahmedabad City Command', lat: 23.0225, lng: 72.5714, zoom: 11 },
+  { name: 'Surat', districtKey: 'Surat', onlinePct: '98.9% ONLINE', camerasCount: '2,150', hubName: 'Hub: Surat Smart City CCC', lat: 21.1702, lng: 72.8311, zoom: 11 },
+  { name: 'Vadodara', districtKey: 'Vadodara', onlinePct: '99.2% ONLINE', camerasCount: '1,620', hubName: 'Hub: Vadodara Urban CCC', lat: 22.3072, lng: 73.1812, zoom: 12 },
+  { name: 'Rajkot', districtKey: 'Rajkot', onlinePct: '97.5% ONLINE', camerasCount: '1,280', hubName: 'Hub: Rajkot Range Police HQ', lat: 22.3039, lng: 70.8022, zoom: 12 },
+  { name: 'Gandhinagar', districtKey: 'Gandhinagar', onlinePct: '100% ONLINE', camerasCount: '950', hubName: 'Hub: State Command Center (HQ)', lat: 23.2156, lng: 72.6369, zoom: 12 },
+  { name: 'Bhavnagar', districtKey: 'Bhavnagar', onlinePct: '96.8% ONLINE', camerasCount: '740', hubName: 'Hub: Bhavnagar District Control', lat: 21.7645, lng: 72.1519, zoom: 12 },
+  { name: 'Jamnagar', districtKey: 'Jamnagar', onlinePct: '98.1% ONLINE', camerasCount: '620', hubName: 'Hub: Jamnagar Police HQ', lat: 22.4707, lng: 70.0577, zoom: 12 },
+  { name: 'Junagadh', districtKey: 'Junagadh', onlinePct: '97.0% ONLINE', camerasCount: '540', hubName: 'Hub: Junagadh Range CCC', lat: 21.5222, lng: 70.4579, zoom: 12 },
+  { name: 'Surendranagar', districtKey: 'Surendranagar', onlinePct: '99.0% ONLINE', camerasCount: '480', hubName: 'Hub: Surendranagar SP Office', lat: 22.7224, lng: 71.6370, zoom: 12 },
+  { name: 'Kutch (Bhuj)', districtKey: 'Kutch', onlinePct: '95.9% ONLINE', camerasCount: '690', hubName: 'Hub: Kutch Border Range CCC', lat: 23.2420, lng: 69.6669, zoom: 11 },
+  { name: 'Mehsana', districtKey: 'Mehsana', onlinePct: '98.4% ONLINE', camerasCount: '410', hubName: 'Hub: Mehsana District Control', lat: 23.5880, lng: 72.3693, zoom: 12 },
+  { name: 'Navsari', districtKey: 'Navsari', onlinePct: '99.1% ONLINE', camerasCount: '380', hubName: 'Hub: Navsari Police Control', lat: 20.9467, lng: 72.9520, zoom: 12 },
+];
+
+// Basemap Provider URLs
 const TILE_LAYERS = {
   googleHybrid: {
     url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
@@ -102,7 +131,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     });
   }, [cameras, selectedDept, selectedDistrict, selectedStatus, searchQuery]);
 
-  // Helper for custom Leaflet divIcon
+  // Custom Leaflet divIcon
   const createCustomMarkerIcon = (status: CameraHealthStatus, isSelected: boolean) => {
     let colorHex = '#10B981';
     if (status === 'DEGRADED') colorHex = '#F59E0B';
@@ -253,19 +282,21 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     };
   }, [activeCameras, selectedCamera]);
 
-  const handleSelectCameraInTable = (cam: Camera) => {
-    setSelectedCamera(cam);
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([cam.latitude, cam.longitude], 14, { duration: 1.2 });
-    }
-  };
-
   const handleZoomIn = () => {
     mapInstanceRef.current?.zoomIn();
   };
 
   const handleZoomOut = () => {
     mapInstanceRef.current?.zoomOut();
+  };
+
+  const handleSelectDistrictHub = (card: DistrictHubCard) => {
+    const targetDist = card.districtKey;
+    setSelectedDistrict(prev => prev === targetDist ? 'ALL' : targetDist);
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([card.lat, card.lng], card.zoom, { duration: 1.2 });
+    }
   };
 
   return (
@@ -299,6 +330,43 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
             <span>Offline ({cameras.filter(c => c.healthStatus === 'OFFLINE').length})</span>
           </div>
         </div>
+      </div>
+
+      {/* 12 District Command Hub Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {DISTRICT_HUB_CARDS.map(card => {
+          const isSelected = selectedDistrict === card.districtKey;
+
+          return (
+            <div
+              key={card.name}
+              onClick={() => handleSelectDistrictHub(card)}
+              className={`bg-white rounded-xl p-4 border transition-all duration-150 cursor-pointer shadow-2xs flex flex-col justify-between group ${
+                isSelected ? 'border-[#0052CC] ring-2 ring-blue-100 shadow-md bg-blue-50/20' : 'border-slate-200 hover:border-blue-300 hover:shadow-xs'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-slate-900 tracking-tight group-hover:text-[#0052CC] transition">
+                  {card.name}
+                </h3>
+                <span className="px-2 py-0.5 rounded-md text-[10.5px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  {card.onlinePct}
+                </span>
+              </div>
+
+              <div className="mt-2.5 space-y-1">
+                <div className="text-xs font-medium text-slate-500 flex items-center">
+                  <CameraIcon className="w-3.5 h-3.5 text-[#0052CC] mr-1.5" />
+                  <strong className="text-slate-900 font-extrabold mr-1">{card.camerasCount}</strong>
+                  <span>Active Cameras</span>
+                </div>
+                <div className="text-[11px] font-medium text-slate-400 truncate">
+                  {card.hubName}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Main Interactive Leaflet Map & Inspector Viewport */}
@@ -455,7 +523,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
 
               <button
                 onClick={() => onSelectCamera(selectedCamera)}
-                className="w-full py-2.5 bg-[#0052CC] hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-xs"
+                className="w-full py-2.5 bg-[#0052CC] hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer"
               >
                 <Eye className="w-4 h-4" />
                 <span>Open Full Node Dossier & Live Stream</span>

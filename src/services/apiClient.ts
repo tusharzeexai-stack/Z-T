@@ -1,8 +1,19 @@
-// Frontend API Client connecting dynamically to Z-TRACS FastAPI AWS Backend
+// Frontend API Client connecting dynamically to Z-TRACS FastAPI Backend
 import { Camera, CanonicalVms, CanonicalConnector, CanonicalEvent, AnprEvent, SystemAlert, InvestigationCase } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://43.204.235.231:8000/api/v1';
-const HEALTH_BASE = API_BASE.replace('/api/v1', '');
+const getDynamicApiBase = (): string => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // When deployed on Vercel over HTTPS, use relative /api/v1 to avoid raw IP SSL handshake failure
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    return '/api/v1';
+  }
+  return 'http://43.204.235.231:8000/api/v1';
+};
+
+const API_BASE = getDynamicApiBase();
+const HEALTH_BASE = API_BASE.startsWith('http') ? API_BASE.replace('/api/v1', '') : '';
 
 export interface SystemDependencyHealth {
   name: string;
@@ -44,7 +55,9 @@ export class ApiClient {
 
   static async getCameras(params?: { lat?: number; lng?: number; radius?: number; minLat?: number; maxLat?: number; minLng?: number; maxLng?: number }): Promise<Camera[]> {
     try {
-      const url = new URL(`${API_BASE}/cameras`);
+      let targetUrl = `${API_BASE}/cameras`;
+      const url = new URL(targetUrl, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+      
       if (params) {
         if (params.lat !== undefined) url.searchParams.append('lat', params.lat.toString());
         if (params.lng !== undefined) url.searchParams.append('lng', params.lng.toString());
@@ -57,7 +70,6 @@ export class ApiClient {
       const res = await fetch(url.toString());
       const json = await res.json();
       if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-        // Map backend schema to frontend Camera interface
         return json.data.map((c: any) => ({
           cameraUuid: c.cameraUuid || c.id || `uuid-${c.cameraCode}`,
           cameraCode: c.cameraCode || `CAM-GJ-${c.district?.substring(0,3).toUpperCase()}-001`,

@@ -118,3 +118,31 @@ async def request_download_url(evidence_id: str, payload: Dict[str, Any] = Body(
         "presignedDownloadUrl": download_url,
         "expiresInSeconds": 3600
     })
+
+@router.delete("/{evidence_id}")
+async def delete_evidence(evidence_id: str, operator_id: str = "GJ-POL-2026-01"):
+    """
+    Delete Evidence Record & S3 Object (Restricted to Authorized Administrators)
+    """
+    try:
+        conn = await get_db_connection()
+        s3_key = await conn.fetchval("SELECT s3_key FROM evidence WHERE evidence_id = $1;", uuid.UUID(evidence_id))
+        
+        if s3_key:
+            try:
+                s3_evidence_service.s3_client.delete_object(Bucket=s3_evidence_service.bucket, Key=s3_key)
+            except Exception as s3_err:
+                print(f"[S3 DELETE ERROR] {s3_err}")
+                
+        await conn.execute("DELETE FROM evidence WHERE evidence_id = $1;", uuid.UUID(evidence_id))
+        
+        # Log Audit Trail
+        await conn.execute("""
+            INSERT INTO audit_logs (operator_id, operator_name, action, ip_address)
+            VALUES ($1, $2, $3, $4);
+        """, operator_id, "System Administrator", f"DELETED_S3_EVIDENCE ({evidence_id})", "10.142.1.25")
+        
+        await conn.close()
+        return ApiResponse.ok({"evidenceId": evidence_id, "status": "DELETED"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

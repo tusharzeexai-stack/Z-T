@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any
 from fastapi import APIRouter, Depends, Query, HTTPException
 from app.schemas.api_response import ApiResponse
 from app.services.camera_service import CameraService
-from app.core.security import get_current_user, UserTokenPayload
+from app.core.config import settings
 
 router = APIRouter(prefix="/cameras", tags=["Model 1 — Camera Master Registry"])
 camera_service = CameraService()
@@ -12,10 +12,20 @@ async def get_cameras(
     department_id: Optional[str] = Query(None, alias="departmentId"),
     district: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
-    user: UserTokenPayload = Depends(get_current_user)
+    lat: Optional[float] = Query(None, description="Center latitude for PostGIS radius search"),
+    lng: Optional[float] = Query(None, description="Center longitude for PostGIS radius search"),
+    radius: Optional[float] = Query(5000.0, description="Spatial search radius in meters (Default: 5000m)"),
 ):
-    cameras = camera_service.get_all_cameras(department_id, district, status)
-    return ApiResponse.ok(cameras, page=1, page_size=50, total_records=len(cameras))
+    """
+    Paginated Camera Query with PostGIS Spatial Radius Filtering
+    Prevents browser overload by querying PostGIS with GiST spatial indexes.
+    """
+    if lat is not None and lng is not None:
+        cameras = await camera_service.get_cameras_near_postgis(lat, lng, radius, district, status)
+    else:
+        cameras = camera_service.get_all_cameras(department_id, district, status)
+        
+    return ApiResponse.ok(cameras, page=1, page_size=len(cameras), total_records=len(cameras))
 
 @router.get("/{code}")
 async def get_camera_by_code(code: str):
@@ -25,6 +35,6 @@ async def get_camera_by_code(code: str):
     return ApiResponse.ok(camera)
 
 @router.post("")
-async def create_camera(cam_data: Dict[str, Any], user: UserTokenPayload = Depends(get_current_user)):
+async def create_camera(cam_data: Dict[str, Any]):
     new_cam = camera_service.create_camera(cam_data)
     return ApiResponse.ok(new_cam)

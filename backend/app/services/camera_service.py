@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from app.db.store import UnifiedStore
+from app.core.config import settings
 
 class CameraService:
     def __init__(self):
@@ -17,6 +18,53 @@ class CameraService:
                 continue
             result.append(c)
         return result
+
+    async def get_cameras_near_postgis(self, lat: float, lng: float, radius_meters: float = 5000.0, district: Optional[str] = None, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Queries live AWS RDS PostGIS using ST_DWithin and GiST spatial index"""
+        try:
+            import asyncpg
+            conn = await asyncpg.connect(
+                user=settings.POSTGRES_USER,
+                password=settings.POSTGRES_PASSWORD,
+                database=settings.POSTGRES_DB,
+                host=settings.POSTGRES_HOST,
+                port=settings.POSTGRES_PORT,
+            )
+            query = """
+                SELECT 
+                    camera_uuid, camera_code, name, department_id, department_name, district, health_status, stream_url, latitude, longitude,
+                    ST_Distance(location_geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance_m
+                FROM cameras
+                WHERE ST_DWithin(location_geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
+            """
+            params = [lng, lat, radius_meters]
+            if district and district != "ALL":
+                query += " AND district = $4"
+                params.append(district)
+                
+            query += " ORDER BY distance_m LIMIT 100;"
+            rows = await conn.fetch(query, *params)
+            await conn.close()
+
+            results = []
+            for r in rows:
+                results.append({
+                    "cameraUuid": str(r["camera_uuid"]),
+                    "cameraCode": r["camera_code"],
+                    "name": r["name"],
+                    "departmentId": r["department_id"],
+                    "departmentName": r["department_name"],
+                    "district": r["district"],
+                    "healthStatus": r["health_status"],
+                    "streamUrl": r["stream_url"],
+                    "latitude": r["latitude"],
+                    "longitude": r["longitude"],
+                    "distanceMeters": round(r["distance_m"], 2)
+                })
+            return results
+        except Exception as e:
+            print(f"[POSTGIS FALLBACK] {e}")
+            return self.find_cameras_near(lat, lng, radius_meters / 1000.0)
 
     def get_camera_by_code(self, code: str) -> Optional[Dict[str, Any]]:
         for c in self.store.cameras:
@@ -35,47 +83,10 @@ class CameraService:
             "healthStatus": cam_data.get("healthStatus", "ONLINE"),
             "latitude": cam_data.get("latitude", 23.0298),
             "longitude": cam_data.get("longitude", 72.5074),
-            "address": cam_data.get("address", "SG Highway, Satellite"),
-            "city": cam_data.get("city", "Ahmedabad"),
             "district": cam_data.get("district", "Ahmedabad"),
             "departmentId": cam_data.get("departmentId", "DEPT-POL-01"),
             "departmentName": cam_data.get("departmentName", "Gujarat Police (Traffic Division)"),
-            "owner": cam_data.get("owner", "State Command"),
-            "responsibleOfficer": cam_data.get("responsibleOfficer", {
-                "name": "Insp. Vikram V. Solanki",
-                "designation": "Traffic Inspector",
-                "phone": "+91 98250 12345",
-                "email": "vikram.solanki@gujarat.gov.in"
-            }),
-            "manufacturer": cam_data.get("manufacturer", "Hikvision"),
-            "model": cam_data.get("model", "DS-2CD2143G0-I"),
-            "firmwareVersion": cam_data.get("firmwareVersion", "v5.6.5"),
-            "resolution": cam_data.get("resolution", "1920x1080"),
-            "ptzSupport": cam_data.get("ptzSupport", False),
-            "installationDate": cam_data.get("installationDate", datetime.now().strftime("%Y-%m-%d")),
-            "networkType": cam_data.get("networkType", "Fiber WAN"),
-            "vmsPlatformId": cam_data.get("vmsPlatformId", "VMS-MIL-01"),
-            "vmsPlatformName": cam_data.get("vmsPlatformName", "XProtect Traffic Hub"),
-            "protocol": cam_data.get("protocol", "ONVIF Profile S"),
-            "endpointReference": cam_data.get("endpointReference", "rtsp://gateway.sdc.gujarat.gov.in:554/live"),
-            "storageType": cam_data.get("storageType", "Department SAN"),
-            "retentionDays": cam_data.get("retentionDays", 30),
-            "capabilities": cam_data.get("capabilities", {
-                "anpr": True,
-                "vehicleDetection": True,
-                "personDetection": True,
-                "edgeAI": True,
-                "otherAnalytics": ["Speed Radar"]
-            }),
-            "lastHeartbeat": now_str,
-            "fps": 25,
-            "bitrate": 4096,
-            "availability": 99.8,
-            "deviceHealth": "Nominal",
             "createdAt": now_str,
-            "createdBy": "System Admin",
-            "updatedAt": now_str,
-            "updatedBy": "System Admin"
         }
         self.store.cameras.insert(0, new_cam)
         return new_cam

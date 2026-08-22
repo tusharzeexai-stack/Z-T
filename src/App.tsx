@@ -30,6 +30,7 @@ import {
   CanonicalEvent
 } from './types';
 import { RBACProvider, useRBAC } from './context/RBACContext';
+import { ApiClient } from './services/apiClient';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
 import { OverviewView } from './components/OverviewView';
@@ -164,6 +165,29 @@ function MainApp() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isSystemStatusOpen, setIsSystemStatusOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+  // Live Dynamic AWS Backend Integration
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveBackendData = async () => {
+      try {
+        const liveCams = await ApiClient.getCameras({ lat: 23.0225, lng: 72.5714, radius: 50000 });
+        if (isMounted && liveCams && liveCams.length > 0) {
+          // Combine live RDS cameras with mock dataset for comprehensive coverage
+          setCameras(prev => {
+            const existingCodes = new Set(prev.map(c => c.cameraCode));
+            const newCams = liveCams.filter(c => !existingCodes.has(c.cameraCode));
+            return [...newCams, ...prev];
+          });
+        }
+      } catch (err) {
+        console.warn('[App] Live backend fetch error, retaining initial dataset:', err);
+      }
+    };
+
+    fetchLiveBackendData();
+    return () => { isMounted = false; };
+  }, []);
 
   // Cross-Module Action Handlers
   const handleAddCamera = (newCam: Camera) => {

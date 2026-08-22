@@ -2,14 +2,17 @@
 import { Camera, CanonicalVms, CanonicalConnector, CanonicalEvent, AnprEvent, SystemAlert, InvestigationCase } from '../types';
 
 const getDynamicApiBase = (): string => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  // When deployed on Vercel over HTTPS, use relative /api/v1 to avoid raw IP SSL handshake failure
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  // When hosted on Vercel over HTTPS, ALWAYS enforce relative /api/v1 or https:// to prevent Mixed Content blocking
   if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    if (envUrl && envUrl.startsWith('https://')) {
+      return envUrl;
+    }
     return '/api/v1';
   }
-  return 'http://43.204.235.231:8000/api/v1';
+  
+  return envUrl || 'http://43.204.235.231:8000/api/v1';
 };
 
 const API_BASE = getDynamicApiBase();

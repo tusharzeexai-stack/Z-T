@@ -16,10 +16,10 @@ class Settings:
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
-    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "z-tracs-gj.c5u8ogweeig9.ap-south-1.rds.amazonaws.com")
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
     POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgresgjtracs")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "PostgresGjtracs")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "postgres")
     
     DATABASE_URL: str = os.getenv(

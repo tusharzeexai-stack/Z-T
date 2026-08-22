@@ -15,7 +15,8 @@ import {
   List,
   Eye,
   RotateCcw,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Globe
 } from 'lucide-react';
 
 interface CctvGisViewProps {
@@ -27,8 +28,23 @@ interface CctvGisViewProps {
   selectedDeptFilter?: string;
 }
 
-// Tile Layer URLs
+// Basemap Provider URLs (Google Maps Satellite, Google Hybrid, Esri, CartoDB, OSM)
 const TILE_LAYERS = {
+  googleHybrid: {
+    url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google Satellite + Road Overlay | Gujarat Police GIS',
+    name: 'Google Maps Satellite Hybrid 🛰️',
+  },
+  googleSat: {
+    url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google Satellite Imagery | Gujarat Police GIS',
+    name: 'Google Maps Satellite (Pure)',
+  },
+  googleStreets: {
+    url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google Maps Vector | Gujarat Police GIS',
+    name: 'Google Maps Vector Streets',
+  },
   standard: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap contributors | Gujarat Police GIS',
@@ -58,7 +74,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   const [selectedDept, setSelectedDept] = useState(selectedDeptFilter);
   const [selectedDistrict, setSelectedDistrict] = useState(selectedDistrictFilter);
   const [selectedStatus, setSelectedStatus] = useState('ALL');
-  const [activeTileLayerKey, setActiveTileLayerKey] = useState<'standard' | 'cartoDark' | 'satellite'>('standard');
+  const [activeTileLayerKey, setActiveTileLayerKey] = useState<keyof typeof TILE_LAYERS>('googleHybrid');
   const [isLayerDrawerOpen, setIsLayerDrawerOpen] = useState(false);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -66,7 +82,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
 
-  // Filtered cameras dataset memoized for 80,000 node scale
+  // Filtered cameras dataset
   const activeCameras = React.useMemo(() => {
     return cameras.filter(cam => {
       if (cam.lifecycle === 'ARCHIVED') return false;
@@ -88,10 +104,10 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
 
   // Helper for custom Leaflet divIcon
   const createCustomMarkerIcon = (status: CameraHealthStatus, isSelected: boolean) => {
-    let colorHex = '#10B981'; // Online - emerald
-    if (status === 'DEGRADED') colorHex = '#F59E0B'; // Degraded - amber
-    if (status === 'OFFLINE') colorHex = '#EF4444'; // Offline - red
-    if (status === 'UNKNOWN') colorHex = '#6B7280'; // Unknown - grey
+    let colorHex = '#10B981';
+    if (status === 'DEGRADED') colorHex = '#F59E0B';
+    if (status === 'OFFLINE') colorHex = '#EF4444';
+    if (status === 'UNKNOWN') colorHex = '#6B7280';
 
     const size = isSelected ? 28 : 22;
     const border = isSelected ? '3px solid #0052CC' : '2px solid #FFFFFF';
@@ -119,7 +135,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
 
     return L.divIcon({
       html: htmlStr,
-      className: 'custom-leaflet-marker',
+      className: 'custom-gis-marker',
       iconSize: [size, size],
       iconAnchor: [size / 2, size / 2],
     });
@@ -128,25 +144,26 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
   // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapInstanceRef.current) return; // Prevent double init
+    if (mapInstanceRef.current) return;
 
-    // Center on Gujarat state (22.2587° N, 71.1924° E)
     const map = L.map(mapContainerRef.current, {
       center: [22.45, 71.85],
       zoom: 8,
       zoomControl: false,
     });
 
-    const tileLayer = L.tileLayer(TILE_LAYERS[activeTileLayerKey].url, {
-      attribution: TILE_LAYERS[activeTileLayerKey].attribution,
-      maxZoom: 19,
+    const activeConfig = TILE_LAYERS[activeTileLayerKey];
+    const initialTileLayer = L.tileLayer(activeConfig.url, {
+      attribution: activeConfig.attribution,
+      maxZoom: 20,
     }).addTo(map);
 
+    tileLayerRef.current = initialTileLayer;
+
     const markersGroup = L.layerGroup().addTo(map);
+    markersGroupRef.current = markersGroup;
 
     mapInstanceRef.current = map;
-    tileLayerRef.current = tileLayer;
-    markersGroupRef.current = markersGroup;
 
     return () => {
       map.remove();
@@ -156,46 +173,55 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
 
   // Update Tile Layer when key changes
   useEffect(() => {
-    if (!mapInstanceRef.current || !tileLayerRef.current) return;
-    tileLayerRef.current.setUrl(TILE_LAYERS[activeTileLayerKey].url);
+    if (!mapInstanceRef.current) return;
+    if (tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+    }
+    const config = TILE_LAYERS[activeTileLayerKey];
+    const newLayer = L.tileLayer(config.url, {
+      attribution: config.attribution,
+      maxZoom: 20,
+    }).addTo(mapInstanceRef.current);
+
+    tileLayerRef.current = newLayer;
   }, [activeTileLayerKey]);
 
-  // Sync Markers on Map with Spatial Viewport Bounding Box (Max 500 DOM markers on screen)
+  // Update Markers inside map viewport
   useEffect(() => {
     if (!mapInstanceRef.current || !markersGroupRef.current) return;
-    const map = mapInstanceRef.current;
 
     const renderViewportMarkers = () => {
-      if (!markersGroupRef.current || !mapInstanceRef.current) return;
+      if (!mapInstanceRef.current || !markersGroupRef.current) return;
+      const bounds = mapInstanceRef.current.getBounds();
+
       markersGroupRef.current.clearLayers();
 
-      const bounds = map.getBounds();
-      // Render only cameras inside current map viewport, capped at 500 max for 60FPS DOM rendering
-      const visible = activeCameras
-        .filter(c => bounds.contains([c.latitude, c.longitude]))
-        .slice(0, 500);
+      const visibleCameras = activeCameras.filter(cam =>
+        bounds.contains([cam.latitude, cam.longitude])
+      ).slice(0, 500);
 
-      visible.forEach(cam => {
+      visibleCameras.forEach(cam => {
         const isSelected = selectedCamera?.cameraUuid === cam.cameraUuid;
         const icon = createCustomMarkerIcon(cam.healthStatus, isSelected);
 
         const marker = L.marker([cam.latitude, cam.longitude], { icon });
 
+        const statusBg = cam.healthStatus === 'ONLINE' ? '#DCFCE7' : cam.healthStatus === 'DEGRADED' ? '#FEF3C7' : '#FEE2E2';
         const statusColor = cam.healthStatus === 'ONLINE' ? '#166534' : cam.healthStatus === 'DEGRADED' ? '#92400E' : '#991B1B';
-        const statusBg   = cam.healthStatus === 'ONLINE' ? '#DCFCE7' : cam.healthStatus === 'DEGRADED' ? '#FEF3C7' : '#FEE2E2';
+
         const popupContent = `
           <div style="font-family:'Plus Jakarta Sans',Inter,sans-serif;font-size:12px;padding:4px 2px;min-width:210px;">
-            <div style="font-weight:800;font-family:monospace;color:#0052CC;letter-spacing:.04em;">${cam.cameraCode}</div>
-            <div style="font-weight:700;color:#0F172A;margin-top:3px;font-size:13px;">${cam.name}</div>
-            <div style="color:#64748B;font-size:11px;margin-top:2px;">${cam.district} &bull; ${cam.departmentName}</div>
-            <hr style="border:none;border-top:1px solid #E2E8F0;margin:6px 0;"/>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <span style="background:${statusBg};color:${statusColor};font-weight:700;font-size:10px;padding:2px 7px;border-radius:9999px;border:1px solid ${statusColor}40;">${cam.healthStatus}</span>
-              <span style="color:#64748B;font-size:10px;">${cam.fps} FPS &bull; ${cam.resolution}</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+              <div style="font-weight:800;color:#0F172A;font-size:12.5px;">${cam.cameraCode}</div>
+              <span style="background:${statusBg};color:${statusColor};font-weight:800;font-size:9px;padding:2px 6px;border-radius:9999px;">
+                ● ${cam.healthStatus}
+              </span>
             </div>
-            <div style="margin-top:5px;color:#475569;font-size:10px;">
-              <span style="font-weight:600;">Type:</span> ${cam.type} &nbsp;|&nbsp;
-              <span style="font-weight:600;">Lifecycle:</span> ${cam.lifecycle}
+            <div style="color:#334155;font-weight:600;margin-top:2px;">${cam.name}</div>
+            <div style="color:#64748B;font-size:10.5px;margin-top:1px;">${cam.address}</div>
+            <hr style="border:none;border-top:1px solid #E2E8F0;margin:6px 0;"/>
+            <div style="color:#64748B;font-size:10px;">
+              <span style="font-weight:600;">Dept:</span> ${cam.departmentName}
             </div>
             <div style="margin-top:3px;color:#64748B;font-size:10px;">
               <span style="font-weight:600;">VMS:</span> ${cam.vmsPlatformName}
@@ -209,10 +235,8 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
         const popup = L.popup({ closeButton: false, offset: [0, -10], className: 'ztrac-hover-popup' }).setContent(popupContent);
         marker.bindPopup(popup);
 
-        // Open popup on hover, close on mouse-out
         marker.on('mouseover', function() { marker.openPopup(); });
         marker.on('mouseout',  function() { marker.closePopup(); });
-        // Click still selects the camera
         marker.on('click', () => setSelectedCamera(cam));
         markersGroupRef.current?.addLayer(marker);
       });
@@ -220,17 +244,15 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
 
     renderViewportMarkers();
 
-    // Re-render markers on map pan/zoom for smooth 80k node navigation
-    map.on('moveend', renderViewportMarkers);
-    map.on('zoomend', renderViewportMarkers);
+    mapInstanceRef.current.on('moveend', renderViewportMarkers);
+    mapInstanceRef.current.on('zoomend', renderViewportMarkers);
 
     return () => {
-      map.off('moveend', renderViewportMarkers);
-      map.off('zoomend', renderViewportMarkers);
+      mapInstanceRef.current?.off('moveend', renderViewportMarkers);
+      mapInstanceRef.current?.off('zoomend', renderViewportMarkers);
     };
   }, [activeCameras, selectedCamera]);
 
-  // Center map on selected camera when row clicked
   const handleSelectCameraInTable = (cam: Camera) => {
     setSelectedCamera(cam);
     if (mapInstanceRef.current) {
@@ -246,16 +268,6 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
     mapInstanceRef.current?.zoomOut();
   };
 
-  const resetFilters = () => {
-    setSearchQuery('');
-    setSelectedDept('ALL');
-    setSelectedDistrict('ALL');
-    setSelectedStatus('ALL');
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([22.45, 71.85], 8);
-    }
-  };
-
   return (
     <div className="space-y-4 animate-in fade-in duration-150 select-none">
       
@@ -263,10 +275,11 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EDF3FA] text-[#0052CC] border border-blue-200">
-              PostGIS ↔ Leaflet.js
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-[#0052CC] border border-blue-200 flex items-center space-x-1">
+              <Globe className="w-3 h-3" />
+              <span>Google Maps Satellite & Hybrid Tiles Active</span>
             </span>
-            <span className="text-xs text-slate-500 font-medium">OpenStreetMap Real Vector Grid</span>
+            <span className="text-xs text-slate-500 font-medium">PostGIS Spatial Vector Layer</span>
           </div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight mt-1">Statewide CCTV GIS Viewport</h1>
         </div>
@@ -351,17 +364,20 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
 
             <button
               onClick={() => setIsLayerDrawerOpen(p => !p)}
-              className="bg-white/95 backdrop-blur-xs p-2 rounded-lg border border-slate-200 shadow-md text-slate-700 hover:text-[#0052CC] transition flex items-center space-x-1 text-xs font-semibold"
+              className="bg-white/95 backdrop-blur-xs p-2 rounded-lg border border-slate-200 shadow-md text-[#0052CC] hover:bg-blue-50 transition flex items-center space-x-1.5 text-xs font-bold"
             >
-              <Layers className="w-4 h-4" />
-              <span className="hidden sm:inline">Tiles</span>
+              <Layers className="w-4 h-4 text-[#0052CC]" />
+              <span>Satellite & Map Layers</span>
             </button>
           </div>
 
           {/* Tile Layer Selector Drawer */}
           {isLayerDrawerOpen && (
-            <div className="absolute top-16 right-3 z-[1001] bg-white rounded-xl border border-slate-200 shadow-xl p-3 w-56 space-y-2 text-xs animate-in fade-in">
-              <span className="font-bold text-slate-800 block">Basemap Provider</span>
+            <div className="absolute top-16 right-3 z-[1001] bg-white rounded-xl border border-slate-200 shadow-2xl p-3.5 w-64 space-y-2 text-xs animate-in fade-in">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <span className="font-bold text-slate-900">Basemap Layer Provider</span>
+                <span className="text-[10px] bg-blue-100 text-[#0052CC] px-2 py-0.5 rounded font-bold">HD Satellite</span>
+              </div>
               <div className="space-y-1.5">
                 {(Object.keys(TILE_LAYERS) as Array<keyof typeof TILE_LAYERS>).map(k => (
                   <button
@@ -370,9 +386,12 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
                       setActiveTileLayerKey(k);
                       setIsLayerDrawerOpen(false);
                     }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-md font-medium transition ${activeTileLayerKey === k ? 'bg-[#0052CC] text-white font-bold' : 'hover:bg-slate-100 text-slate-700'}`}
+                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition flex items-center justify-between ${
+                      activeTileLayerKey === k ? 'bg-[#0052CC] text-white shadow-xs' : 'hover:bg-slate-100 text-slate-700'
+                    }`}
                   >
-                    {TILE_LAYERS[k].name}
+                    <span>{TILE_LAYERS[k].name}</span>
+                    {activeTileLayerKey === k && <span className="text-[10px]">✓ Active</span>}
                   </button>
                 ))}
               </div>
@@ -383,8 +402,10 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
           <div ref={mapContainerRef} className="w-full h-full z-0" />
 
           {/* Floating Scale & EPSG Bar */}
-          <div className="absolute bottom-2 left-3 z-[1000] bg-white/80 backdrop-blur-xs px-2 py-1 rounded text-[10px] font-mono text-slate-600 border border-slate-200">
-            EPSG:4326 • Gujarat Polygon Bounds • Real OSM Tile Stream
+          <div className="absolute bottom-2 left-3 z-[1000] bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded text-[10px] font-mono text-slate-700 border border-slate-300 shadow-xs flex items-center space-x-2">
+            <span>EPSG:4326</span>
+            <span>•</span>
+            <span className="font-bold text-[#0052CC]">{TILE_LAYERS[activeTileLayerKey].name}</span>
           </div>
 
         </div>
@@ -398,124 +419,55 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-[#0052CC] border border-blue-200">
                     Selected Node Inspector
                   </span>
-                  <span className="font-mono text-xs font-bold text-slate-800">{selectedCamera.cameraCode}</span>
-                </div>
-                <h3 className="text-base font-bold text-slate-900 mt-1">{selectedCamera.name}</h3>
-                <p className="text-xs text-slate-500 font-mono">{selectedCamera.address}</p>
-              </div>
-
-              <div className="space-y-2.5 text-xs pt-2 border-t border-slate-100">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Department:</span>
-                  <span className="font-semibold text-slate-800 text-right">{selectedCamera.departmentName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">District / Taluka:</span>
-                  <span className="font-medium text-slate-800">{selectedCamera.district} ({selectedCamera.taluka || 'Central'})</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Hardware & Type:</span>
-                  <span className="font-medium text-slate-800">{selectedCamera.manufacturer} • {selectedCamera.type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">GPS Coordinates:</span>
-                  <span className="font-mono text-slate-800">{selectedCamera.latitude.toFixed(4)}°N, {selectedCamera.longitude.toFixed(4)}°E</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Health Telemetry:</span>
-                  <span className={`font-bold ${selectedCamera.healthStatus === 'ONLINE' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {selectedCamera.healthStatus} ({selectedCamera.fps} FPS)
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                    selectedCamera.healthStatus === 'ONLINE' ? 'bg-emerald-100 text-emerald-800' :
+                    selectedCamera.healthStatus === 'DEGRADED' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    ● {selectedCamera.healthStatus}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Linked VMS:</span>
-                  <span className="font-mono text-slate-700">{selectedCamera.vmsPlatformName}</span>
+                <h3 className="text-lg font-bold text-slate-900 mt-2 tracking-tight">{selectedCamera.cameraCode}</h3>
+                <p className="text-xs text-slate-600 font-medium">{selectedCamera.name}</p>
+              </div>
+
+              <div className="space-y-2 text-xs border-t border-slate-100 pt-3">
+                <div className="flex justify-between py-1 border-b border-slate-50">
+                  <span className="text-slate-500">District / City:</span>
+                  <span className="font-bold text-slate-900">{selectedCamera.district}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-50">
+                  <span className="text-slate-500">Department:</span>
+                  <span className="font-bold text-slate-900">{selectedCamera.departmentName}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-50">
+                  <span className="text-slate-500">VMS Platform:</span>
+                  <span className="font-bold text-[#0052CC]">{selectedCamera.vmsPlatformName}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-50">
+                  <span className="text-slate-500">Manufacturer & Model:</span>
+                  <span className="font-mono text-slate-800">{selectedCamera.manufacturer} {selectedCamera.model}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-50">
+                  <span className="text-slate-500">Coordinates:</span>
+                  <span className="font-mono text-slate-900">{selectedCamera.latitude.toFixed(5)}, {selectedCamera.longitude.toFixed(5)}</span>
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
-                <span className="text-slate-500 block font-medium">Nodal Officer in Charge:</span>
-                <span className="font-semibold text-slate-900 block mt-0.5">{selectedCamera.responsibleOfficer.name}</span>
-                <span className="text-slate-500 text-[11px] font-mono">{selectedCamera.responsibleOfficer.phone}</span>
-              </div>
+              <button
+                onClick={() => onSelectCamera(selectedCamera)}
+                className="w-full py-2.5 bg-[#0052CC] hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-xs"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Open Full Node Dossier & Live Stream</span>
+              </button>
             </div>
           ) : (
-            <div className="py-20 text-center text-slate-400">
-              <MapPin className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-              <p className="text-xs">Click any map node to inspect metadata</p>
+            <div className="h-full flex items-center justify-center text-slate-400 text-xs">
+              Select a camera node on the satellite map to view details
             </div>
           )}
-
-          {selectedCamera && (
-            <button
-              onClick={() => onSelectCamera(selectedCamera)}
-              className="w-full mt-4 flex items-center justify-center space-x-2 py-2 px-4 bg-[#0052CC] text-white text-xs font-semibold rounded-lg hover:bg-[#0041A8] transition shadow-xs"
-            >
-              <Eye className="w-4 h-4" />
-              <span>Open Master Specification</span>
-            </button>
-          )}
         </div>
 
-      </div>
-
-      {/* Synchronized Bottom Registry Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="p-3.5 bg-[#EDF3FA] border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <List className="w-4 h-4 text-[#0052CC]" />
-            <span className="text-xs font-bold text-slate-800">Synchronized Geospatial Camera Records ({activeCameras.length})</span>
-          </div>
-          <span className="text-[11px] text-slate-500 font-mono">Bi-directional Map ↔ Table Linkage Active</span>
-        </div>
-
-        <div className="max-h-56 overflow-y-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-600 font-semibold text-[10px] uppercase tracking-wider border-b border-slate-200 sticky top-0">
-              <tr>
-                <th className="py-2.5 px-4">Code</th>
-                <th className="py-2.5 px-4">Name & Location</th>
-                <th className="py-2.5 px-4">Department</th>
-                <th className="py-2.5 px-4">District</th>
-                <th className="py-2.5 px-4">Status</th>
-                <th className="py-2.5 px-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {activeCameras.map(camera => {
-                const isSelected = selectedCamera?.cameraUuid === camera.cameraUuid;
-                return (
-                  <tr 
-                    key={camera.cameraUuid}
-                    onClick={() => handleSelectCameraInTable(camera)}
-                    className={`hover:bg-blue-50/40 transition cursor-pointer ${isSelected ? 'bg-blue-50/70 font-semibold' : ''}`}
-                  >
-                    <td className="py-2.5 px-4 font-mono text-[#0052CC]">{camera.cameraCode}</td>
-                    <td className="py-2.5 px-4 text-slate-900">{camera.name}</td>
-                    <td className="py-2.5 px-4 text-slate-600">{camera.departmentName}</td>
-                    <td className="py-2.5 px-4">{camera.district}</td>
-                    <td className="py-2.5 px-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${camera.healthStatus === 'ONLINE' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                        {camera.healthStatus}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectCameraInTable(camera);
-                        }}
-                        className="text-[#0052CC] hover:underline font-semibold text-xs"
-                      >
-                        Locate on Map
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
       </div>
 
     </div>

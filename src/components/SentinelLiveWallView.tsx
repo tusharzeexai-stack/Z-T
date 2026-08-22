@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Maximize2, ExternalLink, ShieldCheck, Grid2x2, LayoutGrid, Monitor } from 'lucide-react';
+import { Video, Maximize2, ExternalLink, ShieldCheck, Grid2x2, LayoutGrid, Monitor, X, Play } from 'lucide-react';
 
 const SENTINEL_BASE = 'https://live.sentinelgujarat.in';
 
@@ -21,7 +21,7 @@ const SENTINEL_CAMERAS: SentinelCamera[] = [
   { id: '3',  number: 3,  name: 'Camera 3',  location: 'O.N.G.C. Office Complex',          city: 'Ahmedabad',    status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '4',  number: 4,  name: 'Camera 4',  location: 'Paldi Circle Junction',            city: 'Ahmedabad',    status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '5',  number: 5,  name: 'Camera 5',  location: 'Visat Teen Rasta',                 city: 'Gandhinagar',  status: 'live', codec: 'H.264', container: 'mp4' },
-  { id: '6',  number: 6,  name: 'Camera 6',  location: 'Timbavadi Gate',                   city: 'Junagadh',     status: 'live', codec: 'AVI',   container: 'avi' },
+  { id: '6',  number: 6,  name: 'Camera 6',  location: 'Timbavadi Gate',                   city: 'Junagadh',     status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '7',  number: 7,  name: 'Camera 7',  location: 'Hero Showroom Highway',            city: 'Gir Somnath',  status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '8',  number: 8,  name: 'Camera 8',  location: 'Majewadi Gate',                    city: 'Junagadh',     status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '9',  number: 9,  name: 'Camera 9',  location: 'New Bypass Circle',                city: 'Junagadh',     status: 'live', codec: 'H.264', container: 'mp4' },
@@ -38,7 +38,7 @@ const SENTINEL_CAMERAS: SentinelCamera[] = [
   { id: '20', number: 20, name: 'Camera 20', location: 'Khaparia Panchayat',               city: 'Navsari',      status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '21', number: 21, name: 'Camera 21', location: 'Mohanpura Chowk',                  city: 'Navsari',      status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '22', number: 22, name: 'Camera 22', location: 'Patan Dethali Char Rasta',           city: 'Patan',        status: 'live', codec: 'H.264', container: 'mp4' },
-  { id: '23', number: 23, name: 'Camera 23', location: 'BK Mervada Tran Rasta',              city: 'Patan',        status: 'live', codec: 'AVI',   container: 'avi' },
+  { id: '23', number: 23, name: 'Camera 23', location: 'BK Mervada Tran Rasta',              city: 'Patan',        status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '24', number: 24, name: 'Camera 24', location: 'Kheram Junction',                  city: 'Patan',        status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '25', number: 25, name: 'Camera 25', location: 'Dehgam Circle',                    city: 'Gandhinagar',  status: 'live', codec: 'H.264', container: 'mp4' },
   { id: '26', number: 26, name: 'Camera 26', location: 'Dhanori Main Road',                city: 'Navsari',      status: 'live', codec: 'H.264', container: 'mp4' },
@@ -64,13 +64,13 @@ function CameraFeedTile({
       {/* Enlarged Video Viewport Container */}
       <div className="relative flex-1 min-h-0 bg-black overflow-hidden" style={{ height }}>
 
-        {/* Sentinel Gujarat Official Player Page Iframe — Height extended to clip bottom bar */}
+        {/* Sentinel Gujarat Official Player Page Iframe */}
         <iframe
           src={`${SENTINEL_BASE}/camera/${encodeURIComponent(cam.id)}`}
           title={`${cam.name} - ${cam.location}`}
           className="w-full border-0 relative z-1"
           style={{ height: 'calc(100% + 44px)' }}
-          allow="autoplay; fullscreen"
+          allow="autoplay; fullscreen; picture-in-picture"
         />
 
         {/* Live OSD Badge */}
@@ -127,7 +127,6 @@ export const SentinelLiveWallView: React.FC = () => {
   const totalPages = Math.ceil(SENTINEL_CAMERAS.length / pageSize);
   const displayedCameras = SENTINEL_CAMERAS.slice(page * pageSize, (page + 1) * pageSize);
 
-  // Dynamic Tile Heights based on Grid Size for Enlarged Display
   const tileHeight =
     gridSize === 2 ? 400 :
     gridSize === 3 ? 340 :
@@ -179,7 +178,6 @@ export const SentinelLiveWallView: React.FC = () => {
             ))}
           </div>
 
-          {/* Open Original Portal Link */}
           <a
             href={SENTINEL_BASE}
             target="_blank"
@@ -256,37 +254,62 @@ export const SentinelLiveWallView: React.FC = () => {
         </div>
       </div>
 
-      {/* Fullscreen Modal for single camera */}
+      {/* Fullscreen Enlarged Live Stream Player Modal */}
       {fullscreenCam && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex flex-col p-4 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[99999] bg-black/95 flex flex-col p-4 sm:p-6 animate-in fade-in zoom-in-95 duration-150"
           onClick={() => setFullscreenCam(null)}
         >
           <div className="flex items-center justify-between mb-3 text-white">
             <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+              <div className="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-pulse"></div>
               <div>
-                <h3 className="font-bold text-base">{fullscreenCam.name}</h3>
-                <p className="text-xs text-slate-400">{fullscreenCam.location} • {fullscreenCam.city} High Resolution Stream</p>
+                <h3 className="font-bold text-base">{fullscreenCam.name} — Live Stream</h3>
+                <p className="text-xs text-slate-300 font-mono">{fullscreenCam.location} • {fullscreenCam.city} • High Resolution Stream</p>
               </div>
             </div>
-            <button
-              className="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition cursor-pointer"
-              onClick={() => setFullscreenCam(null)}
-            >
-              ✕ Close
-            </button>
+            
+            <div className="flex items-center space-x-3">
+              <a
+                href={`${SENTINEL_BASE}/camera/${encodeURIComponent(fullscreenCam.id)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open Direct Sentinel Stream</span>
+              </a>
+
+              <button
+                className="flex items-center space-x-1 px-4 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition cursor-pointer shadow"
+                onClick={() => setFullscreenCam(null)}
+              >
+                <X className="w-4 h-4" />
+                <span>Close</span>
+              </button>
+            </div>
           </div>
-          <div className="flex-1 flex items-center justify-center bg-black rounded-xl overflow-hidden border border-slate-800" onClick={e => e.stopPropagation()}>
+
+          <div 
+            className="flex-1 flex items-center justify-center bg-black rounded-xl overflow-hidden border border-slate-800 relative shadow-2xl" 
+            onClick={e => e.stopPropagation()}
+          >
             <iframe
               src={`${SENTINEL_BASE}/camera/${encodeURIComponent(fullscreenCam.id)}`}
               title={fullscreenCam.name}
-              className="w-full h-full border-0"
-              allow="autoplay; fullscreen"
+              className="w-full border-0 relative z-10"
+              style={{ height: 'calc(100% + 44px)', width: '100%' }}
+              allow="autoplay; fullscreen; picture-in-picture"
             />
           </div>
-          <div className="text-center text-slate-400 text-xs pt-3 font-mono">
-            CAM {fullscreenCam.number} • {fullscreenCam.location} • Click outside or press Close to exit
+
+          <div className="text-center text-slate-300 text-xs pt-3 font-mono flex items-center justify-center space-x-4">
+            <span>CAM {fullscreenCam.number}</span>
+            <span>•</span>
+            <span>{fullscreenCam.location} ({fullscreenCam.city})</span>
+            <span>•</span>
+            <span className="text-emerald-400 font-bold">● LIVE 100% STREAM ACTIVE</span>
           </div>
         </div>
       )}

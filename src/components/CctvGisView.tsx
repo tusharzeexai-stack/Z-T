@@ -170,7 +170,7 @@ export const CctvGisView: React.FC<CctvGisViewProps> = ({
       markersGroupRef.current.clearLayers();
 
       const bounds = map.getBounds();
-      // Render only cameras inside the current map viewport, capped at 500 for 60FPS
+      // Render only cameras inside current map viewport, capped at 500 max for 60FPS DOM rendering
       const visible = activeCameras
         .filter(c => bounds.contains([c.latitude, c.longitude]))
         .slice(0, 500);

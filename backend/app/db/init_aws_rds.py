@@ -14,7 +14,7 @@ sys.path.insert(0, backend_dir)
 from app.core.config import settings
 
 async def init_aws_rds_database():
-    print(f"📡 Connecting to AWS RDS Database: {settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}...")
+    print(f"[AWS RDS] Connecting to AWS RDS Database: {settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}...")
     
     try:
         import asyncpg
@@ -25,16 +25,16 @@ async def init_aws_rds_database():
             host=settings.POSTGRES_HOST,
             port=settings.POSTGRES_PORT,
         )
-        print("✅ Connected to AWS RDS PostgreSQL successfully!")
+        print("[SUCCESS] Connected to AWS RDS PostgreSQL successfully!")
         
         # 1. Enable PostGIS Spatial Extension
-        print("🗺️ Enabling PostGIS Spatial Extension...")
+        print("[POSTGIS] Enabling PostGIS Spatial Extension...")
         await conn.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
         await conn.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
-        print("✅ PostGIS Spatial Extension Enabled!")
+        print("[SUCCESS] PostGIS Spatial Extension Enabled!")
         
         # 2. Create Cameras Table with Spatial Geometry
-        print("📷 Creating Cameras Table with GiST Spatial Index...")
+        print("[SCHEMA] Creating Cameras Table with GiST Spatial Index...")
         await conn.execute('''
             CREATE TABLE IF NOT EXISTS cameras (
                 camera_uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -56,7 +56,7 @@ async def init_aws_rds_database():
         # Create GiST Spatial Index for sub-8ms spatial radius queries
         await conn.execute('CREATE INDEX IF NOT EXISTS idx_cameras_location_gist ON cameras USING GIST (location_geom);')
         await conn.execute('CREATE INDEX IF NOT EXISTS idx_cameras_code ON cameras (camera_code);')
-        print("✅ Cameras Table & GiST Spatial Indexes Created!")
+        print("[SUCCESS] Cameras Table & GiST Spatial Indexes Created!")
         
         # 3. Create Audit Logs Table
         await conn.execute('''
@@ -69,14 +69,13 @@ async def init_aws_rds_database():
                 timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         ''')
-        print("✅ Audit Logs Table Created!")
+        print("[SUCCESS] Audit Logs Table Created!")
         
         await conn.close()
-        print("🎉 AWS RDS PostGIS Database Initialization Complete!")
+        print("[COMPLETE] AWS RDS PostGIS Database Initialization Complete!")
         
     except Exception as e:
-        print(f"❌ AWS RDS DB Initialization Note: {e}")
-        print("💡 Database script ready for when AWS RDS credentials are populated in .env.")
+        print(f"[ERROR] AWS RDS DB Initialization Error: {e}")
 
 if __name__ == "__main__":
     asyncio.run(init_aws_rds_database())
